@@ -103,3 +103,8 @@ fn simplify(s: &str) -> String {
         })
         .collect()
 }
+
+// Pruebas: src-tauri/tests/chapters.rs
+#[cfg(test)]
+#[path = "../tests/chapters.rs"]
+mod tests;

@@ -59,6 +59,27 @@ cargo tauri dev     # abrir en modo desarrollo (recarga al editar ui/)
 cargo tauri build   # crear FastRead.app y el .dmg en src-tauri/target/release/bundle/
 ```
 
+## Pruebas
+
+```sh
+./test.sh
+```
+
+Corre las pruebas de Rust (`cargo test`) y las de la interfaz (`node --test`, sin instalar
+nada más). Conviene correrlas antes de cada commit.
+
+Cada parte tiene su carpeta de pruebas:
+
+- `src-tauri/tests/`: una prueba por archivo de `src-tauri/src` (book.rs, kobo.rs, chapters.rs).
+  Cada archivo de código termina con `mod tests`, que apunta a su prueba; así las pruebas
+  pueden usar funciones internas. Sus archivos de prueba están en `src-tauri/tests/resources/`:
+  el contenido de un EPUB (`libro-de-prueba/`, que las pruebas comprimen), sus variantes de
+  `content.opf` (`opf/`) y una base de datos de Kobo (`kobo.sql`).
+- `ui-tests/`: pruebas de la interfaz (`*.test.js`). Están fuera de `ui/` para que no se
+  empaqueten dentro de la app. `load-ui.js` carga los archivos de `ui/` en un entorno
+  simulado (sin navegador ni Tauri) para probar sus funciones. Sus archivos de prueba
+  (un `My Clippings.txt` de Kindle y una nota existente de Obsidian) están en `ui-tests/resources/`.
+
 ## Dónde está cada cosa
 
 | Archivo | Qué hace |

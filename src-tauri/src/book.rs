@@ -251,6 +251,12 @@ impl Text {
             if !skip {
                 self.add_text(&rest[..lt], &mut heading);
             }
+            // Comentario <!-- ... -->: se salta entero (puede contener < y > que no son etiquetas).
+            if rest[lt..].starts_with("<!--") {
+                let end = rest[lt..].find("-->").map_or(rest.len(), |e| lt + e + 3);
+                rest = &rest[end..];
+                continue;
+            }
             let Some(gt) = rest[lt..].find('>') else { break };
             let tag = &rest[lt + 1..lt + gt];
             rest = &rest[lt + gt + 1..];
@@ -386,3 +392,8 @@ fn decode_entities(s: &str) -> String {
     out.push_str(rest);
     out
 }
+
+// Pruebas: src-tauri/tests/book.rs
+#[cfg(test)]
+#[path = "../tests/book.rs"]
+pub mod tests;

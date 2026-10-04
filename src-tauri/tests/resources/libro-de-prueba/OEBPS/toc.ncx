@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
+<!-- Índice EPUB 2, con un subcapítulo (Sección 2.1) que apunta a un id dentro de cap2.xhtml -->
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/"><navMap>
+<navPoint id="p1"><navLabel><text>Capítulo 1</text></navLabel><content src="text/cap1.xhtml"/></navPoint>
+<navPoint id="p2"><navLabel><text>Capítulo 2</text></navLabel><content src="text/cap2.xhtml"/>
+  <navPoint id="p21"><navLabel><text>Sección 2.1</text></navLabel><content src="text/cap2.xhtml#s21"/></navPoint>
+</navPoint></navMap></ncx>

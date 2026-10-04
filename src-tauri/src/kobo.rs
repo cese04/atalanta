@@ -54,3 +54,8 @@ pub fn highlights(path: &str) -> Result<Vec<Clip>, String> {
         .map_err(|e| e.to_string())?;
     rows.collect::<Result<_, _>>().map_err(|e| e.to_string())
 }
+
+// Pruebas: src-tauri/tests/kobo.rs
+#[cfg(test)]
+#[path = "../tests/kobo.rs"]
+mod tests;
