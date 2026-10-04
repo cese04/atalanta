@@ -1,0 +1,12 @@
+# Compilación de Rust/Tauri: se regenera con `cargo tauri build` (incluye la .app y el .dmg)
+src-tauri/target/
+# Esquemas que Tauri genera al compilar
+src-tauri/gen/
+
+# Archivos que macOS crea en las carpetas
+.DS_Store
+
+# Ajustes personales del editor y de Claude Code (permisos locales)
+.vscode/
+.idea/
+.claude/settings.local.json

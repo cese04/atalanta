@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es" data-theme="tufte">
+<head>
+  <meta charset="utf-8">
+  <title>FastRead</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Panel izquierdo: libro e índice. Los ajustes están en el menú principal (menu.js). -->
+  <aside>
+    <h1 id="title"></h1>
+    <p id="info"></p>
+    <ul id="toc"></ul>
+  </aside>
+
+  <!-- Lector: dos vistas superpuestas. Leyendo se ve #reader; en pausa, #page. -->
+  <main>
+    <div id="stage">
+      <div id="reader">
+        <p id="msg">Abre un libro .epub o .mobi para empezar</p>
+        <button id="open">Abrir libro… <kbd>⌘O</kbd></button>
+        <p id="head"></p> <!-- capítulo actual, como el encabezado de un libro impreso -->
+        <p id="card"></p> <!-- título completo al llegar a un capítulo -->
+        <div id="word">
+          <span class="side left"><span id="prev"></span><span id="left"></span></span>
+          <span id="pivot"></span>
+          <span class="side"><span id="right"></span><span id="next"></span></span>
+        </div>
+      </div>
+      <!-- El libro completo como texto; se llena desde app.js -->
+      <div id="page"></div>
+      <p id="modeHint">Modo subrayado · selecciona un fragmento · clic en un subrayado para editarlo · <kbd>Esc</kbd> para salir</p>
+    </div>
+
+    <!-- Controles, compartidos por ambas vistas -->
+    <div id="bar">
+      <div id="controls">
+        <button id="back" title="Retroceder 10 palabras (←)">−10</button>
+        <button id="play" title="Leer / pausar (espacio)">Leer</button>
+        <button id="fwd" title="Avanzar 10 palabras (→)">+10</button>
+        <input id="wpm" type="range" min="100" max="1000" step="25" title="Velocidad (↑ ↓)">
+        <span id="wpmLabel"></span>
+      </div>
+      <input id="progress" type="range" min="0" max="0" value="0">
+      <p id="status">
+        <span id="chapterStatus"></span><span id="bookStatus"></span>
+        <button id="helpButton" title="Atajos de teclado (?)">Atajos <kbd>?</kbd></button>
+      </p>
+    </div>
+  </main>
+
+  <!-- Atajos de teclado (tecla ? o Ayuda › Atajos de teclado) -->
+  <div id="help" hidden>
+    <table>
+      <tr><th colspan="2">Lectura</th></tr>
+      <tr><td><kbd>Espacio</kbd></td><td>Leer / pausar</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Retroceder / avanzar 10 palabras</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Más rápido / más lento</td></tr>
+      <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Capítulo anterior / siguiente</td></tr>
+      <tr><th colspan="2">En pausa</th></tr>
+      <tr><td>Clic en una palabra</td><td>Seguir leyendo desde ahí</td></tr>
+      <tr><td><kbd>S</kbd></td><td>Modo subrayado (o subrayar el texto seleccionado)</td></tr>
+      <tr><td>Clic en un subrayado</td><td>Editarlo o eliminarlo (en modo subrayado)</td></tr>
+      <tr><td><kbd>⌘</kbd> <kbd>Enter</kbd></td><td>Guardar el subrayado que se está editando</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Salir del modo subrayado o cerrar esta ayuda</td></tr>
+      <tr><th colspan="2">General</th></tr>
+      <tr><td><kbd>⌘O</kbd></td><td>Abrir libro</td></tr>
+      <tr><td><kbd>⌥⌘S</kbd></td><td>Mostrar u ocultar el índice</td></tr>
+      <tr><td><kbd>?</kbd> o <kbd>⌘/</kbd></td><td>Esta ayuda</td></tr>
+    </table>
+  </div>
+
+  <!-- Editor de un subrayado (notes.js) -->
+  <dialog id="noteDialog">
+    <form method="dialog">
+      <p id="noteChapter"></p>
+      <label>Texto subrayado <textarea id="noteText" rows="6"></textarea></label>
+      <label>Comentario <textarea id="noteComment" rows="3" placeholder="Opcional"></textarea></label>
+      <div class="actions">
+        <button type="button" id="noteDelete">Eliminar</button>
+        <span class="spacer"></span>
+        <button value="cancel">Cancelar</button>
+        <button value="save" id="noteSave">Guardar <kbd>⌘ Enter</kbd></button>
+      </div>
+    </form>
+  </dialog>
+
+  <p id="toast"></p>
+
+  <!-- Orden: app.js primero (define $, invoke...), los demás lo usan. -->
+  <script src="rhythm.js"></script>
+  <script src="app.js"></script>
+  <script src="notes.js"></script>
+  <script src="import.js"></script>
+  <script src="menu.js"></script>
+</body>
+</html>
