@@ -12,6 +12,7 @@
 //   "theme"       -> tema de colores
 //   "sidebar", "chart", "context", "natural" -> "1" / "" (ver `toggles`)
 //   "notesDir"    -> carpeta de notas
+//   "markColor"   -> último color de marcatextos usado
 //   "recent"      -> libros recientes
 //   "last"        -> ruta del último libro abierto
 //   "pos:<ruta>"  -> palabra donde te quedaste en ese libro
@@ -148,8 +149,8 @@ function renderPage() {
   marked = pos < book.words.length ? paragraphOf(pos) : -1;
 }
 
-// Contenido de un párrafo: texto normal, subrayados (<span class="hl">)
-// y la palabra actual (<span id="cur">).
+// Contenido de un párrafo: texto normal, subrayados (<span class="hl" data-color="…">,
+// que se ven como marcatextos) y la palabra actual (<span id="cur">).
 function paragraphNodes(i) {
   const start = book.paragraphs[i];
   const end = paragraphEnd(i);
@@ -158,23 +159,30 @@ function paragraphNodes(i) {
 
   // Agrupa palabras seguidas con el mismo estilo en un solo nodo.
   const nodes = [];
-  let words = [], key = null, mark = null, current = false;
+  let words = [], key = null, mark = null, current = false, lastMark = null;
+  const span = (text, mark) => {
+    const node = document.createElement("span");
+    node.textContent = text;
+    if (mark) {
+      node.className = "hl";
+      node.dataset.id = mark.id;
+      node.dataset.color = markColor(mark);
+    }
+    return node;
+  };
   const flush = () => {
     if (!words.length) return;
-    if (nodes.length) nodes.push(" ");
+    // El espacio entre dos trozos del mismo subrayado también va marcado, para que no queden huecos.
+    if (nodes.length) nodes.push(mark && mark === lastMark ? span(" ", mark) : " ");
     const text = words.join(" ");
     if (!mark && !current) {
       nodes.push(text);
     } else {
-      const span = document.createElement("span");
-      span.textContent = text;
-      if (mark) {
-        span.className = "hl";
-        span.dataset.id = mark.id;
-      }
-      if (current) span.id = "cur";
-      nodes.push(span);
+      const node = span(text, mark);
+      if (current) node.id = "cur";
+      nodes.push(node);
     }
+    lastMark = mark;
     words = [];
   };
   for (let w = start; w < end; w++) {
@@ -287,7 +295,9 @@ function show() {
   $("prev").textContent = book.words[pos - 1] || "";
   $("next").textContent = book.words[pos + 1] || "";
   $("word").classList.toggle("speech", natural && speech[pos] === 1); // diálogo en cursiva
-  $("word").classList.toggle("marked", highlights.some((h) => pos >= h.start && pos <= h.end)); // subrayada
+  const mark = highlights.find((h) => pos >= h.start && pos <= h.end); // palabra subrayada: con su color
+  if (mark) $("word").setAttribute("data-color", markColor(mark));
+  else $("word").removeAttribute("data-color");
 
   // Progreso del libro y del capítulo actual
   const total = book.words.length;

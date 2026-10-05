@@ -8,10 +8,14 @@
 //                                       (Obsidian no muestra carpetas que empiezan con punto).
 // Usa `book`, `path`, `pos`, `invoke`, `open` y funciones de app.js. Kindle y Kobo: import.js.
 
-let highlights = []; // [{ id, start, end, text, note, chapter, created }], ordenados por `start`
+let highlights = []; // [{ id, start, end, text, note, color, chapter, created }], ordenados por `start`
 let notesDir = localStorage.getItem("notesDir") || "";
 let highlighting = false; // modo subrayado
 let editing = null;       // subrayado abierto en el editor
+
+// Colores de marcatextos (los valores están en style.css). El primero es el de siempre.
+const MARK_COLORS = ["amarillo", "verde", "azul", "rosa"];
+const markColor = (h) => (MARK_COLORS.includes(h.color) ? h.color : MARK_COLORS[0]);
 
 // ── Carpeta y archivos ──
 
@@ -186,6 +190,8 @@ function openEditor(h) {
   $("noteChapter").textContent = chapter < 0 ? book.title : book.toc[chapter].title;
   $("noteText").value = h.text ?? textOf(h.start, h.end);
   $("noteComment").value = h.note ?? "";
+  const color = h.id ? markColor(h) : markColor({ color: localStorage.getItem("markColor") }); // nuevo: el último usado
+  document.querySelector(`#noteColors input[value="${color}"]`).checked = true;
   $("noteDelete").hidden = !h.id;
   $("noteDialog").returnValue = "";
   $("noteDialog").showModal();
@@ -210,6 +216,8 @@ $("noteDialog").onclose = async () => {
   }
   h.text = text;
   h.note = $("noteComment").value.trim();
+  h.color = document.querySelector("#noteColors input:checked")?.value || MARK_COLORS[0];
+  localStorage.setItem("markColor", h.color);
   if (!h.id) {
     const chapter = chapterAt(h.start);
     h.id = "h" + Date.now().toString(36);

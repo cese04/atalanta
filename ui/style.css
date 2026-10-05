@@ -10,6 +10,7 @@
   --bg: #fdf6e3; --fg: #586e75; --muted: #93a1a1; --rule: #eee8d5; --bar: #d6cfb8; --accent: #dc322f;
 }
 [data-theme="solarized-dark"] {
+  --mark-alpha: 30%;
   --bg: #002b36; --fg: #93a1a1; --muted: #586e75; --rule: #073642; --bar: #1c4c58; --accent: #dc322f;
   color-scheme: dark;
 }
@@ -17,18 +18,22 @@
   --bg: #eff1f5; --fg: #4c4f69; --muted: #8c8fa1; --rule: #ccd0da; --bar: #bcc0cc; --accent: #d20f39;
 }
 [data-theme="mocha"] {
+  --mark-alpha: 30%;
   --bg: #1e1e2e; --fg: #cdd6f4; --muted: #7f849c; --rule: #313244; --bar: #45475a; --accent: #f38ba8;
   color-scheme: dark;
 }
 [data-theme="gruvbox"] {
+  --mark-alpha: 30%;
   --bg: #282828; --fg: #ebdbb2; --muted: #928374; --rule: #3c3836; --bar: #504945; --accent: #fb4934;
   color-scheme: dark;
 }
 [data-theme="nord"] {
+  --mark-alpha: 30%;
   --bg: #2e3440; --fg: #d8dee9; --muted: #7b88a1; --rule: #3b4252; --bar: #4c566a; --accent: #88c0d0;
   color-scheme: dark;
 }
 [data-theme="dracula"] {
+  --mark-alpha: 30%;
   --bg: #282a36; --fg: #f8f8f2; --muted: #6272a4; --rule: #44475a; --bar: #4f5370; --accent: #ff79c6;
   color-scheme: dark;
 }
@@ -253,23 +258,38 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--muted);
 }
 
-/* ── Subrayados ── */
+/* ── Subrayados: como un marcatextos ── */
 
-/* En el texto: una línea fina del color de acento, como un subrayado a lápiz. */
+/* Colores de marcatextos. Se mezclan con el fondo al --mark-alpha (menos en temas oscuros,
+   para que el texto se siga leyendo). Al añadir uno, súmalo también a MARK_COLORS (notes.js). */
+html {
+  --amarillo: #f5cf3d;
+  --verde: #7ccf7a;
+  --azul: #6eaef0;
+  --rosa: #f08bb8;
+  --mark-alpha: 45%;
+}
+[data-color="amarillo"] { --mark: var(--amarillo); }
+[data-color="verde"] { --mark: var(--verde); }
+[data-color="azul"] { --mark: var(--azul); }
+[data-color="rosa"] { --mark: var(--rosa); }
+
+/* En el texto; si el subrayado ocupa varios renglones, cada uno lleva sus esquinas redondeadas. */
 .hl {
-  text-decoration: underline 0.1em var(--accent);
-  text-underline-offset: 0.15em;
+  background: color-mix(in srgb, var(--mark) var(--mark-alpha), transparent);
+  border-radius: 0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 /* En el lector, si la palabra actual está subrayada. */
-#word.marked #left, #word.marked #pivot, #word.marked #right {
-  text-decoration: underline 0.05em var(--accent);
-  text-underline-offset: 0.15em;
+#word[data-color] #left, #word[data-color] #pivot, #word[data-color] #right {
+  background: color-mix(in srgb, var(--mark) var(--mark-alpha), transparent);
 }
 
 /* Modo subrayado: cursor de texto y aviso arriba. */
 main.highlighting #page { cursor: text; }
 main.highlighting .hl { cursor: pointer; }
-main.highlighting .hl:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+main.highlighting .hl:hover { outline: 1px solid var(--mark); }
 #modeHint {
   position: absolute;
   bottom: 0;
@@ -318,6 +338,21 @@ main.highlighting #modeHint { opacity: 1; }
 }
 #noteDialog textarea:focus { outline: none; border-color: var(--muted); }
 #noteDialog .actions { display: flex; align-items: center; gap: 0.75rem; }
+
+/* Selector de color: círculos; el elegido lleva un anillo. */
+.colors { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.875rem; font-size: 0.8125rem; color: var(--muted); }
+#noteDialog .colors label { margin: 0; }
+.colors input { position: absolute; opacity: 0; pointer-events: none; }
+.colors span {
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--mark);
+  cursor: pointer;
+}
+.colors input:checked + span { outline: 2px solid var(--fg); outline-offset: 2px; }
+.colors input:focus-visible + span { outline: 2px dashed var(--muted); outline-offset: 2px; }
 #noteDialog .spacer { flex: 1; }
 #noteSave { color: var(--fg); }
 

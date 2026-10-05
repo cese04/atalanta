@@ -113,3 +113,10 @@ test("Resumen: en una nota que ya existía se añade arriba sin tocar lo demás"
   assert.ok(md.startsWith("<!-- fastread:resumen:inicio"));
   assert.ok(md.includes("## Resumen\n\nUn resumen.") && md.includes("Mis ideas ANTES") && md.includes("Mis ideas DESPUÉS"));
 });
+
+test("color de marcatextos: amarillo si falta o no es válido", () => {
+  const ui = loadUI();
+  assert.equal(ui.run('markColor({ color: "azul" })'), "azul");
+  assert.equal(ui.run("markColor({})"), "amarillo");          // subrayados de antes, sin color
+  assert.equal(ui.run('markColor({ color: "morado" })'), "amarillo");
+});
