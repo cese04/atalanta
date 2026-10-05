@@ -82,7 +82,7 @@ function renderToc() {
   $("toc").innerHTML = "";
   book.toc.forEach((chapter, i) => {
     const li = document.createElement("li");
-    li.style.paddingLeft = chapter.level * 14 + "px"; // sangría para subcapítulos
+    li.style.paddingLeft = chapter.level * 0.875 + "rem"; // sangría para subcapítulos
     li.innerHTML = `<span></span><span class="time"></span><div class="bar"><div class="fill"></div></div>`;
     li.children[0].textContent = chapter.title;
     li.children[1].textContent = formatMinutes(lengths[i] / wpm);
