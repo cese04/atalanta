@@ -115,8 +115,28 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 #msg { color: var(--muted); margin: 0; }
 #msg:empty { display: none; }
 
-/* Cambio de capítulo: #reader.blank = pantalla vacía (respiro), #reader.titled = tarjeta con el título. */
-#head { margin: 0; min-height: 1.4em; color: var(--muted); font-size: 14px; font-style: italic; }
+/* Capítulo actual, arriba a la derecha, en ambas vistas. Los títulos largos se recortan con "…". */
+#head {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  max-width: 60%;
+  margin: 0;
+  padding: 14px 24px 0;
+  text-align: right;
+  font-size: 17px;
+  font-style: italic;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+/* Cambio de capítulo: #reader.blank = pantalla vacía (respiro), #reader.titled = tarjeta con el título.
+   Mientras tanto el encabezado también se oculta (aún muestra el capítulo anterior). */
 #card {
   position: absolute;
   inset: 0;
@@ -131,8 +151,9 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   opacity: 0;
   pointer-events: none;
 }
-#head, #card { transition: opacity 0.3s; }
-#reader.blank #head, #reader.blank #word, #reader.titled #head, #reader.titled #word {
+#card { transition: opacity 0.3s; }
+#stage:has(#reader.blank, #reader.titled) #head { opacity: 0; }
+#reader.blank #word, #reader.titled #word {
   opacity: 0;
   transition: opacity 0.3s; /* se desvanece al irse; reaparece de golpe */
 }
@@ -176,6 +197,7 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 
 /* Vista de pausa: el libro como texto corrido, en una columna de lectura cómoda. */
 #page {
+  top: 48px; /* deja arriba la franja del encabezado del capítulo */
   overflow-y: auto;
   padding: 12vh max(32px, calc(50% - 17em));
   font-size: 19px;
@@ -246,7 +268,9 @@ main.highlighting .hl { cursor: pointer; }
 main.highlighting .hl:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 #modeHint {
   position: absolute;
-  top: 10px;
+  bottom: 0;
+  padding: 6px 0;
+  background: var(--bg);
   left: 0;
   right: 0;
   margin: 0;

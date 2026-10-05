@@ -16,10 +16,12 @@
   <!-- Lector: dos vistas superpuestas. Leyendo se ve #reader; en pausa, #page. -->
   <main>
     <div id="stage">
+      <!-- Capítulo actual, arriba a la derecha como el encabezado de un libro impreso.
+           Está fuera de las dos vistas para verse también en pausa. -->
+      <p id="head"></p>
       <div id="reader">
         <p id="msg">Abre un libro .epub o .mobi para empezar</p>
         <button id="open">Abrir libro… <kbd>⌘O</kbd></button>
-        <p id="head"></p> <!-- capítulo actual, como el encabezado de un libro impreso -->
         <p id="card"></p> <!-- título completo al llegar a un capítulo -->
         <div id="word">
           <span class="side left"><span id="prev"></span><span id="left"></span></span>
