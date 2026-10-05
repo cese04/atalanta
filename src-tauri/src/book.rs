@@ -229,7 +229,10 @@ fn mobi_links(html: &str) -> Vec<(String, usize)> {
 // ─────────────────────── HTML -> palabras ───────────────────────
 
 /// Etiquetas que no separan palabras (p. ej. la letra capital en <span>L</span>a).
-const INLINE: &[&str] = &["a", "b", "i", "u", "em", "strong", "span", "small", "sup", "sub", "font"];
+const INLINE: &[&str] = &[
+    "a", "b", "i", "u", "s", "em", "strong", "span", "small", "big", "sup", "sub", "font",
+    "cite", "q", "abbr", "dfn", "code", "tt", "mark", "time",
+];
 
 #[derive(Default)]
 struct Text {

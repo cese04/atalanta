@@ -111,6 +111,8 @@ fn entidades_html() {
 fn html_a_texto_plano() {
     assert_eq!(plain_text("<div><p>Uno <b>dos</b>.</p><p>Tres&nbsp;cuatro.</p></div>"), "Uno dos.\n\nTres cuatro.");
     assert_eq!(plain_text("Sin etiquetas."), "Sin etiquetas.");
+    // <cite>, <q>… no cortan el párrafo (como en el resumen de Demian)
+    assert_eq!(plain_text("<p><cite>Demian</cite> es la <q>historia</q>.</p>"), "Demian es la historia.");
     assert_eq!(plain_text(""), "");
 }
 
