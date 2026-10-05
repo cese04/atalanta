@@ -26,14 +26,16 @@ async function importKindle() {
 
 // Kindle no guarda el capítulo de cada subrayado: se busca la cita dentro del libro,
 // en el propio Kindle o en las carpetas de tus libros recientes (ver chapters.rs).
+// De ese mismo libro se toma su resumen.
 async function addKindleChapters(clips, dirs) {
   const titles = [...new Set(clips.map((c) => c.title))];
   dirs = [...new Set(dirs)];
   for (const [n, title] of titles.entries()) {
     notify(`Kindle: buscando capítulos (${n + 1} de ${titles.length})…`);
     const quoted = clips.filter((c) => c.title === title && c.text);
-    const chapters = await invoke("find_chapters", { title, quotes: quoted.map((c) => c.text), dirs });
-    quoted.forEach((c, i) => (c.chapter = chapters[i] || ""));
+    const found = await invoke("find_chapters", { title, quotes: quoted.map((c) => c.text), dirs });
+    quoted.forEach((c, i) => (c.chapter = found.chapters[i] || ""));
+    for (const c of clips) if (c.title === title) c.description = found.description; // resumen del libro
   }
 }
 
@@ -60,8 +62,8 @@ async function importKobo() {
   await importClips("Kobo", clips);
 }
 
-// Escribe los subrayados (de muchos libros) en el .md de cada libro.
-// clips = [{ title, author, chapter, text, note }]
+// Escribe los subrayados (de muchos libros) en el .md de cada libro, y su resumen si lo hay.
+// clips = [{ title, author, chapter, text, note, description }]
 async function importClips(source, clips) {
   const books = new Map(); // título -> sus subrayados
   for (const c of clips) {
@@ -70,7 +72,9 @@ async function importClips(source, clips) {
   }
   try {
     for (const [title, list] of books) {
-      await writeSection({ title, author: list[0].author, source }, source, clipsMarkdown(source, list));
+      const info = { title, author: list[0].author, source };
+      await writeSection(info, source, clipsMarkdown(source, list));
+      await writeSummary(info, list.find((c) => c.description)?.description);
     }
     const count = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
     notify(`${source}: ${count(clips.length, "subrayado")} de ${count(books.size, "libro")} ${clips.length === 1 ? "importado" : "importados"}`);

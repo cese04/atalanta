@@ -2,11 +2,18 @@
 //! Kindle, que no guardan el capítulo: se busca el texto de la cita dentro del libro.
 
 use crate::book::{self, Book};
+use serde::Serialize;
 use std::path::{Path, PathBuf};
 
-/// Capítulo de cada cita, en el mismo orden ("" si no se encontró). El libro se busca
-/// por su nombre de archivo, parecido a `title`, dentro de `dirs` y sus subcarpetas.
-pub fn find(title: &str, quotes: &[String], dirs: &[String]) -> Vec<String> {
+#[derive(Serialize)]
+pub struct Found {
+    pub chapters: Vec<String>, // capítulo de cada cita, en el mismo orden ("" si no se encontró)
+    pub description: String,   // resumen del libro encontrado ("" si no hay)
+}
+
+/// Busca el libro por su nombre de archivo, parecido a `title`, dentro de `dirs` y sus
+/// subcarpetas, y devuelve el capítulo de cada cita y el resumen del libro.
+pub fn find(title: &str, quotes: &[String], dirs: &[String]) -> Found {
     let key: String = simplify(title).chars().take(20).collect();
     let mut files = Vec::new();
     for dir in dirs {
@@ -14,7 +21,7 @@ pub fn find(title: &str, quotes: &[String], dirs: &[String]) -> Vec<String> {
     }
 
     // Puede haber varios archivos parecidos: gana el que contiene más citas.
-    let mut best = vec![String::new(); quotes.len()];
+    let mut best = Found { chapters: vec![String::new(); quotes.len()], description: String::new() };
     let mut most_found = 0;
     for file in files {
         let name = simplify(&file.file_name().unwrap_or_default().to_string_lossy());
@@ -26,7 +33,8 @@ pub fn find(title: &str, quotes: &[String], dirs: &[String]) -> Vec<String> {
         let found = chapters.iter().filter(|c| c.is_some()).count();
         if found > most_found {
             most_found = found;
-            best = chapters.into_iter().map(Option::unwrap_or_default).collect();
+            best.chapters = chapters.into_iter().map(Option::unwrap_or_default).collect();
+            best.description = book.description;
         }
     }
     best

@@ -30,8 +30,9 @@ fragmentos que se guardan como notas Markdown para Obsidian.
 
 Por cada libro se escriben dos archivos en la carpeta de notas:
 
-- `Título.md`: una sección por origen (`## FastRead`, `## Kindle`, `## Kobo`), con las citas
-  agrupadas por capítulo y cada una con su comentario. FastRead solo reescribe lo que hay
+- `Título.md`: el resumen del libro (`## Resumen`, si sus metadatos lo traen) y una sección
+  por origen (`## FastRead`, `## Kindle`, `## Kobo`), con las citas agrupadas por capítulo y
+  cada una con su comentario. FastRead solo reescribe lo que hay
   entre sus marcas (`<!-- fastread:… -->`): lo que escribas fuera se conserva.
 - `.fastread/Título.json`: los subrayados de FastRead, editables (Obsidian no muestra carpetas que empiezan con punto).
 

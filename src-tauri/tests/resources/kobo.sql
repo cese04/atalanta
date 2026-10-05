@@ -5,15 +5,15 @@
 --  - "Viejo" (epub sin archivos de tipo 9): el capítulo se encuentra por el ContentID.
 -- Tipos de `content`: 6 = libro, 9 = archivo interno del libro, 899 = capítulo.
 
-CREATE TABLE content (ContentID TEXT, ContentType INTEGER, Title TEXT, Attribution TEXT, VolumeIndex INTEGER, BookID TEXT);
+CREATE TABLE content (ContentID TEXT, ContentType INTEGER, Title TEXT, Attribution TEXT, VolumeIndex INTEGER, BookID TEXT, Description TEXT);
 CREATE TABLE Bookmark (VolumeID TEXT, ContentID TEXT, Text TEXT, Annotation TEXT, ChapterProgress REAL);
 
 INSERT INTO content VALUES
-  ('s', 6, 'Sísifo', 'Camus', -1, NULL),
-  ('s!!a.html', 9, NULL, NULL, 0, 's'), ('s!!b.html', 9, NULL, NULL, 1, 's'), ('s!!c.html', 9, NULL, NULL, 2, 's'),
-  ('s!!a.html-1', 899, 'Uno', NULL, 0, 's'), ('s!!c.html-1', 899, 'Tres', NULL, 1, 's'),
-  ('v', 6, 'Viejo', 'Anónimo', -1, NULL),
-  ('v#(1)cap1.html', 899, 'Primero', NULL, 0, 'v');
+  ('s', 6, 'Sísifo', 'Camus', -1, NULL, '<p>Un <em>ensayo</em>.</p><p>Sobre lo absurdo.</p>'),  -- resumen en HTML
+  ('s!!a.html', 9, NULL, NULL, 0, 's', NULL), ('s!!b.html', 9, NULL, NULL, 1, 's', NULL), ('s!!c.html', 9, NULL, NULL, 2, 's', NULL),
+  ('s!!a.html-1', 899, 'Uno', NULL, 0, 's', NULL), ('s!!c.html-1', 899, 'Tres', NULL, 1, 's', NULL),
+  ('v', 6, 'Viejo', 'Anónimo', -1, NULL, NULL),                                           -- sin resumen
+  ('v#(1)cap1.html', 899, 'Primero', NULL, 0, 'v', NULL);
 
 INSERT INTO Bookmark VALUES
   ('s', 's!!c.html', 'En el tres.', NULL, 0.1),

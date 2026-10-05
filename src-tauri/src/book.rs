@@ -13,6 +13,7 @@ use std::io::Read;
 pub struct Book {
     pub title: String,
     pub author: String,
+    pub description: String, // resumen del libro (de sus metadatos), en texto plano
     pub words: Vec<String>,
     pub paragraphs: Vec<usize>, // número de la primera palabra de cada párrafo
     pub toc: Vec<Chapter>,
@@ -65,6 +66,8 @@ fn open_epub(path: &str) -> Result<Book, String> {
     let title = title.unwrap_or("Sin título").trim().to_string();
     let author = doc.descendants().find(|n| n.has_tag_name("creator")).and_then(|n| n.text());
     let author = author.unwrap_or("").trim().to_string();
+    let description = doc.descendants().find(|n| n.has_tag_name("description")).and_then(|n| n.text());
+    let description = plain_text(description.unwrap_or(""));
 
     // 2. manifest: id -> (ruta dentro del zip, tipo, propiedades)
     let mut manifest = HashMap::new();
@@ -94,7 +97,7 @@ fn open_epub(path: &str) -> Result<Book, String> {
             entries = nav_toc(&read_zip(&mut zip, href).unwrap_or_default(), &parent(href));
         }
     }
-    Ok(text.into_book(title, author, entries))
+    Ok(Book { description, ..text.into_book(title, author, entries) })
 }
 
 /// Índice EPUB 2: <navMap><navPoint><navLabel><text>Título</text></navLabel><content src="..."/>
@@ -200,7 +203,8 @@ fn open_mobi(path: &str) -> Result<Book, String> {
         start = cut;
     }
     let entries = links.into_iter().map(|(title, pos)| (title, 0, pos.to_string())).collect();
-    Ok(text.into_book(m.title(), m.author().unwrap_or_default(), entries))
+    let description = plain_text(&m.description().unwrap_or_default());
+    Ok(Book { description, ..text.into_book(m.title(), m.author().unwrap_or_default(), entries) })
 }
 
 /// Busca los enlaces <a filepos=N>Título</a> -> [(Título, N)]
@@ -335,8 +339,17 @@ impl Text {
         if toc.is_empty() {
             toc = self.headings;
         }
-        Book { title, author, words: self.words, paragraphs: self.paragraphs, toc }
+        Book { title, author, description: String::new(), words: self.words, paragraphs: self.paragraphs, toc }
     }
+}
+
+/// HTML a texto plano (p. ej. el resumen de un libro): párrafos separados por una línea en blanco.
+pub fn plain_text(html: &str) -> String {
+    let mut text = Text::default();
+    text.add_html("", html);
+    let ends = text.paragraphs.iter().skip(1).copied().chain([text.words.len()]);
+    let paragraphs: Vec<String> = text.paragraphs.iter().zip(ends).map(|(&start, end)| text.words[start..end].join(" ")).collect();
+    paragraphs.join("\n\n")
 }
 
 /// Valor de un atributo dentro de una etiqueta: attr(r#"p id="x""#, "id") -> Some("x")

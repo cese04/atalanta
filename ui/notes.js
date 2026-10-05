@@ -1,6 +1,7 @@
 // Subrayados y notas. Se guardan en la carpeta de notas elegida, dos archivos por libro:
-//   <carpeta>/<Título>.md               para leer en Obsidian. Tiene una sección por origen
-//                                       (## FastRead, ## Kindle, ## Kobo), cada una entre sus
+//   <carpeta>/<Título>.md               para leer en Obsidian. Tiene el resumen del libro
+//                                       (## Resumen, si sus metadatos lo traen) y una sección por
+//                                       origen (## FastRead, ## Kindle, ## Kobo), cada una entre sus
 //                                       marcas; FastRead solo reescribe esas secciones y lo que
 //                                       escribas fuera de ellas se conserva.
 //   <carpeta>/.fastread/<Título>.json   los subrayados de FastRead, que se pueden editar
@@ -55,6 +56,7 @@ async function saveHighlights() {
     });
     const info = { title: book.title, author: book.author, source: path.split(/[\\/]/).pop() };
     await writeSection(info, "FastRead", clipsMarkdown("FastRead", highlights));
+    await writeSummary(info, book.description);
     notify(`Guardado en ${notesName()}.md`);
   } catch (e) {
     notify("No se pudieron guardar las notas: " + e);
@@ -69,17 +71,32 @@ function sectionMarks(source) {
 
 // Escribe (o reemplaza) la sección `source` en el .md del libro y conserva todo lo demás.
 // `info` = { title, author, source }: se usa para el nombre y las propiedades de un archivo nuevo.
-async function writeSection(info, source, body) {
+// Una sección nueva va al final, o arriba (justo después de las propiedades) si `top` es true.
+async function writeSection(info, source, body, top = false) {
   const file = `${notesDir}/${fileName(info.title)}.md`;
   const old = await invoke("read_text", { path: file });
   const [start, end] = sectionMarks(source);
   const section = `${start}\n${body}\n\n${end}`;
   const a = old.indexOf(start.slice(0, start.indexOf(" ·"))); // basta con el inicio de la marca
   const b = old.indexOf(end);
-  const md = a >= 0 && b > a
-    ? old.slice(0, a) + section + old.slice(b + end.length)
-    : (old ? old.trimEnd() + "\n\n" : frontmatter(info)) + section + "\n";
+  let md;
+  if (a >= 0 && b > a) md = old.slice(0, a) + section + old.slice(b + end.length); // ya existía: se reemplaza
+  else if (!old) md = frontmatter(info) + section + "\n";                          // archivo nuevo
+  else if (top) md = afterFrontmatter(old, section);
+  else md = old.trimEnd() + "\n\n" + section + "\n";
   await invoke("write_text", { path: file, content: md });
+}
+
+// Inserta `section` justo después de las propiedades (el bloque --- … ---) o al principio.
+function afterFrontmatter(old, section) {
+  const properties = old.match(/^---\n[\s\S]*?\n---\n/);
+  const at = properties ? properties[0].length : 0;
+  return old.slice(0, at) + (at ? "\n" : "") + section + "\n\n" + old.slice(at).replace(/^\n+/, "");
+}
+
+// Resumen del libro (de sus metadatos) en su propia sección, arriba de los subrayados.
+async function writeSummary(info, description) {
+  if (description) await writeSection(info, "Resumen", `## Resumen\n\n${description}`, true);
 }
 
 // Propiedades del archivo para Obsidian (solo se escriben al crearlo).

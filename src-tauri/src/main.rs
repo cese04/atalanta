@@ -17,9 +17,9 @@ async fn kobo_highlights(path: String) -> Result<Vec<kobo::Clip>, String> {
     kobo::highlights(&path)
 }
 
-/// Capítulo de cada cita de un libro, buscándolo en unas carpetas (ver chapters.rs).
+/// Capítulo de cada cita de un libro y su resumen, buscándolo en unas carpetas (ver chapters.rs).
 #[tauri::command]
-async fn find_chapters(title: String, quotes: Vec<String>, dirs: Vec<String>) -> Vec<String> {
+async fn find_chapters(title: String, quotes: Vec<String>, dirs: Vec<String>) -> chapters::Found {
     chapters::find(&title, &quotes, &dirs)
 }
 

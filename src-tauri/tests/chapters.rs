@@ -23,11 +23,14 @@ fn capitulo_de_cada_cita() {
     ]
     .map(String::from);
     let found = find("Libro de prueba", &quotes, &[dir.to_string_lossy().to_string()]);
-    assert_eq!(found, ["Capítulo 1", "Capítulo 1", "Capítulo 2", "", ""]);
+    assert_eq!(found.chapters, ["Capítulo 1", "Capítulo 1", "Capítulo 2", "", ""]);
+    assert_eq!(found.description, "Un libro de prueba.\n\nSegundo párrafo & fin."); // el resumen del libro encontrado
 }
 
 #[test]
 fn sin_libro_no_hay_capitulos() {
     let quotes = ["Era una vez un libro".to_string()];
-    assert_eq!(find("Otro título", &quotes, &[temp_dir("vacia").to_string_lossy().to_string()]), [""]);
+    let found = find("Otro título", &quotes, &[temp_dir("vacia").to_string_lossy().to_string()]);
+    assert_eq!(found.chapters, [""]);
+    assert_eq!(found.description, "");
 }

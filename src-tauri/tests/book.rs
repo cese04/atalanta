@@ -60,6 +60,8 @@ fn epub_palabras_parrafos_titulo_y_autor() {
     let book = open(&write_epub(&temp_dir("epub"), "libro.epub", Index::Ncx)).unwrap();
     assert_eq!(book.title, "Libro de prueba");
     assert_eq!(book.author, "Ana Autora");
+    // El resumen viene como HTML escapado en <dc:description>: se convierte a texto con párrafos.
+    assert_eq!(book.description, "Un libro de prueba.\n\nSegundo párrafo & fin.");
     // <head>, <style> y los comentarios no se leen; "E" + "ra" se unen (letra capital);
     // &nbsp; separa; &mdash; y &amp; se decodifican. (ver resources/libro-de-prueba/OEBPS/text/cap1.xhtml)
     assert_eq!(
@@ -103,6 +105,13 @@ fn indice_de_mobi_ignora_enlaces_sin_letras() {
 #[test]
 fn entidades_html() {
     assert_eq!(decode_entities("a&amp;b &lt;&#233;&#xE9;&mdash;&desconocida; & suelto"), "a&b <éé—&desconocida; & suelto");
+}
+
+#[test]
+fn html_a_texto_plano() {
+    assert_eq!(plain_text("<div><p>Uno <b>dos</b>.</p><p>Tres&nbsp;cuatro.</p></div>"), "Uno dos.\n\nTres cuatro.");
+    assert_eq!(plain_text("Sin etiquetas."), "Sin etiquetas.");
+    assert_eq!(plain_text(""), "");
 }
 
 #[test]

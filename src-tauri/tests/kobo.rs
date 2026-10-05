@@ -27,6 +27,8 @@ fn subrayados_con_capitulo_en_orden_de_lectura() {
         ]
     );
     assert_eq!(clips[0].author, "Camus");
+    assert_eq!(clips[0].description, "Un ensayo.\n\nSobre lo absurdo."); // el HTML se convierte a texto
+    assert_eq!(clips[4].description, "");                                  // libro sin resumen
 }
 
 #[test]

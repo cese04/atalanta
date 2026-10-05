@@ -11,6 +11,7 @@ pub struct Clip {
     pub chapter: String,
     pub text: String, // texto subrayado (puede estar vacío si es solo una nota)
     pub note: String, // comentario
+    pub description: String, // resumen del libro, en texto plano
 }
 
 // Un subrayado apunta a su libro (VolumeID) y al archivo interno del libro donde está
@@ -37,7 +38,8 @@ const QUERY: &str = "
                 WHERE c.ContentType = 899 AND c.ContentID LIKE b.ContentID || '%' LIMIT 1),
                ''),
            TRIM(IFNULL(b.Text, '')),
-           TRIM(IFNULL(b.Annotation, ''))
+           TRIM(IFNULL(b.Annotation, '')),
+           IFNULL(book.Description, '')
     FROM Bookmark b
     JOIN content book ON book.ContentID = b.VolumeID
     LEFT JOIN content file ON file.ContentType = 9 AND file.ContentID = b.ContentID
@@ -49,7 +51,15 @@ pub fn highlights(path: &str) -> Result<Vec<Clip>, String> {
     let mut query = db.prepare(QUERY).map_err(|e| e.to_string())?;
     let rows = query
         .query_map([], |row| {
-            Ok(Clip { title: row.get(0)?, author: row.get(1)?, chapter: row.get(2)?, text: row.get(3)?, note: row.get(4)? })
+            let description: String = row.get(5)?;
+            Ok(Clip {
+                title: row.get(0)?,
+                author: row.get(1)?,
+                chapter: row.get(2)?,
+                text: row.get(3)?,
+                note: row.get(4)?,
+                description: crate::book::plain_text(&description), // en el Kobo es HTML
+            })
         })
         .map_err(|e| e.to_string())?;
     rows.collect::<Result<_, _>>().map_err(|e| e.to_string())

@@ -37,13 +37,14 @@ test("Kindle: se buscan los capítulos una vez por libro, en carpetas sin repeti
   const calls = [];
   ui.handle("find_chapters", ({ title, quotes, dirs }) => {
     calls.push({ title, dirs });
-    return quotes.map((q, i) => `Capítulo ${i + 1}`);
+    return { chapters: quotes.map((q, i) => `Capítulo ${i + 1}`), description: `Resumen de ${title}` };
   });
   ui.run(`clips = parseKindle(${JSON.stringify(CLIPPINGS)})`);
   await ui.run('addKindleChapters(clips, ["/Kindle/documents", "/Libros", "/Libros"])');
   assert.deepEqual(calls.map((c) => c.title), ["Demian", "Tender Is the Night"]);
   assert.deepEqual(calls[0].dirs, ["/Kindle/documents", "/Libros"]);
   assert.deepEqual(ui.get("clips.map((c) => c.chapter)"), ["Capítulo 1", "Capítulo 2", "Capítulo 1"]);
+  assert.deepEqual(ui.get("clips.map((c) => c.description)"), ["Resumen de Demian", "Resumen de Demian", "Resumen de Tender Is the Night"]);
 });
 
 test("Markdown: secciones por origen, sin duplicar y conservando lo escrito a mano", async () => {
@@ -86,4 +87,29 @@ test("libros recientes y rutas cortas", () => {
   assert.equal(ui.run('recentLabel({ path: "/a.epub", title: "Demian", words: 200 })'), "Demian — 25 %");
   assert.equal(ui.run('shortPath("/Users/ana/Notas")'), "~/Notas");
   assert.equal(ui.run('shortPath("/Users/ana/Obsidian/Vault/Libros")'), "…/Vault/Libros");
+});
+
+test("Resumen: va arriba, después de las propiedades, y no se duplica", async () => {
+  const ui = loadUI();
+  ui.run('notesDir = "/Vault"');
+  const clips = [
+    { title: "Demian", author: "Hermann Hesse", chapter: "", text: "El pájaro.", note: "", description: "Un libro sobre Sinclair.\n\nSegundo párrafo." },
+  ];
+  await ui.run(`importClips("Kobo", ${JSON.stringify(clips)})`);
+  await ui.run(`importClips("Kobo", ${JSON.stringify(clips)})`); // reimportar
+  const md = ui.files["/Vault/Demian.md"];
+  const order = ["source: \"Kobo\"", "## Resumen", "Un libro sobre Sinclair.\n\nSegundo párrafo.", "## Kobo"].map((t) => md.indexOf(t));
+  assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), "propiedades, resumen y subrayados, en ese orden");
+  assert.equal(md.split("## Resumen").length, 2, "un solo resumen");
+});
+
+test("Resumen: en una nota que ya existía se añade arriba sin tocar lo demás", async () => {
+  const ui = loadUI();
+  ui.run('notesDir = "/Vault"');
+  ui.files["/Vault/Demian.md"] = resource("Demian.md"); // sin propiedades: el resumen va al principio
+  await ui.run('writeSummary({ title: "Demian" }, "Un resumen.")');
+  await ui.run('writeSummary({ title: "Demian" }, "")'); // sin resumen: no se escribe nada
+  const md = ui.files["/Vault/Demian.md"];
+  assert.ok(md.startsWith("<!-- fastread:resumen:inicio"));
+  assert.ok(md.includes("## Resumen\n\nUn resumen.") && md.includes("Mis ideas ANTES") && md.includes("Mis ideas DESPUÉS"));
 });
