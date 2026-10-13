@@ -7,6 +7,8 @@ const BREATH_MS = 700;   // pantalla vacía antes de un capítulo (y de una secc
 const CARD_MS = 2000;    // tiempo que se muestra el título del capítulo
 const RAMP_WORDS = 15;   // palabras para pasar de media velocidad a la normal
 const BLINK_MS = 120;    // parpadeo al empezar un párrafo (ritmo natural)
+const REWIND_AFTER_MS = 3000; // al reanudar tras una pausa más larga, se vuelve al inicio de la frase
+const REWIND_MAX_WORDS = 30;  // …pero sin retroceder más de estas palabras (frases muy largas)
 
 // Pausas, como múltiplos del tiempo de una palabra normal.
 const PAUSE = {
@@ -54,6 +56,21 @@ function delayFor(w) {
     rampLeft--;
   }
   return (60000 / wpm) * pause;
+}
+
+// Dónde seguir al reanudar la lectura: si la pausa fue larga y no se eligió otra palabra,
+// desde el inicio de la frase (sin pasar del inicio del párrafo ni de REWIND_MAX_WORDS atrás).
+function resumeFrom(p, pausedMs, chosen) {
+  if (chosen || pausedMs < REWIND_AFTER_MS) return p;
+  return Math.max(sentenceStart(p), p - REWIND_MAX_WORDS);
+}
+
+// Primera palabra de la frase que contiene a `p`, sin salir de su párrafo.
+// "Sr." o "Mr." no cuentan como final de frase.
+function sentenceStart(p) {
+  const first = book.paragraphs[paragraphOf(p)];
+  while (p > first && !(SENTENCE_END.test(book.words[p - 1]) && !ABBREVIATION.test(book.words[p - 1]))) p--;
+  return p;
 }
 
 // Las palabras largas y los números necesitan un poco más de tiempo.

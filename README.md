@@ -7,6 +7,8 @@ fragmentos que se guardan como notas Markdown para Obsidian.
 ## Usar
 
 - **Archivo › Abrir…** (⌘O) o **Abrir reciente**. Al iniciar, vuelve al último libro donde lo dejaste.
+- Al reanudar tras una pausa de más de 3 segundos, la lectura vuelve al inicio de la frase
+  (como mucho 30 palabras atrás), salvo que hayas elegido otra palabra durante la pausa.
 - Todos los ajustes (temas, índice, gráfica de tiempos, palabras vecinas, ritmo natural) están en el menú **Ver**.
 - Atajos: pulsa `?` o **Ayuda › Atajos de teclado** (⌘/).
 

@@ -28,6 +28,8 @@ let timer = null;  // distinto de null mientras se está leyendo
 let busy = false;  // true durante la animación entre vistas
 let chapterStarts = new Map(); // número de palabra -> capítulo que empieza ahí
 let rampLeft = 0;  // palabras que faltan del arranque gradual
+let pausedAt = 0;  // cuándo se pausó (0: no en esta sesión, p. ej. al abrir un libro)
+let chosen = false; // si en la pausa se eligió otra palabra (clic, flechas, índice…)
 let natural = true; // "Ritmo natural" (ver rhythm.js)
 let speech = new Uint8Array(0); // 1 = la palabra es diálogo (ver findSpeech en rhythm.js)
 let wpm = Number(localStorage.getItem("wpm")) || 300;
@@ -70,6 +72,8 @@ async function openBook(p) {
   renderPage();
   setPaused(true); // un libro recién abierto empieza en pausa, mostrando el texto
   goTo(Number(localStorage.getItem("pos:" + p)) || 0);
+  pausedAt = 0; // al abrir un libro cuenta como una pausa larga: se retoma desde el inicio de la frase
+  chosen = false;
   addRecent();
 }
 
@@ -279,6 +283,7 @@ function goTo(i) {
   pos = Math.max(0, Math.min(i, book.words.length - 1));
   show();
   if (!timer && !busy) {
+    chosen = true; // en pausa, ir a otra palabra es elegir desde dónde seguir
     markWord();
     scrollToWord(false);
   }
@@ -345,6 +350,13 @@ async function play() {
   if (!book || timer || busy) return;
   setHighlighting(false);
   $("play").textContent = "Pausa";
+  const from = resumeFrom(pos, Date.now() - pausedAt, chosen); // tras una pausa larga: inicio de la frase
+  if (from !== pos) {
+    pos = from;
+    show();
+    markWord();
+    scrollToWord(false);
+  }
   await switchView(false, $("cur").getBoundingClientRect(), readerWordRect());
   rampLeft = RAMP_WORDS; // al retomar también se arranca de forma gradual
   tick();
@@ -353,6 +365,8 @@ async function play() {
 function pause() {
   if (!timer) return;
   stopTimer();
+  pausedAt = Date.now();
+  chosen = false;
   show(); // por si se pausó durante un cambio de capítulo
   const from = readerWordRect();
   markWord();
