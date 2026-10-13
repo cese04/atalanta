@@ -96,7 +96,8 @@ h1 { font-size: 1.125rem; font-weight: normal; font-style: italic; margin: 0 0 0
   color: var(--muted);
   cursor: pointer;
 }
-#toc li:hover, #toc li.current { color: var(--fg); }
+#toc li:hover { color: var(--fg); }
+#toc li.current { color: var(--accent); } /* como la barra de progreso del capítulo */
 
 /* Gráfica de tiempo por capítulo: una barra fina bajo cada título, con su etiqueta directa. */
 .time, .bar { display: none; }
