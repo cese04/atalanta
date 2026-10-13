@@ -59,6 +59,30 @@
   color-scheme: dark;
 }
 
+/* ── Tipo de letra (Ver › Tipo de letra): toda la app usa --font-text ──
+   Iowan Old Style, New York, Charter y San Francisco vienen con macOS. ET Book (MIT),
+   Atkinson Hyperlegible e iA Writer Quattro (SIL Open Font License) se incluyen en ui/fonts,
+   cada una con su licencia. */
+@font-face { font-family: "ET Book"; src: url("fonts/et-book-roman-line-figures.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "ET Book"; src: url("fonts/et-book-display-italic-old-style-figures.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "ET Book"; src: url("fonts/et-book-bold-line-figures.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "iA Writer Quattro"; src: url("fonts/iAWriterQuattroS-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "iA Writer Quattro"; src: url("fonts/iAWriterQuattroS-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "iA Writer Quattro"; src: url("fonts/iAWriterQuattroS-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "iA Writer Quattro"; src: url("fonts/iAWriterQuattroS-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; font-display: swap; }
+
+html { --font-text: "Iowan Old Style", Palatino, Georgia, serif; }               /* la de siempre */
+[data-font="newyork"] { --font-text: ui-serif, "New York", Georgia, serif; }      /* la de la app Libros */
+[data-font="charter"] { --font-text: Charter, "Bitstream Charter", Georgia, serif; }
+[data-font="etbook"] { --font-text: "ET Book", Palatino, Georgia, serif; }         /* la de Tufte */
+[data-font="sans"] { --font-text: -apple-system, system-ui, "Helvetica Neue", sans-serif; } /* San Francisco */
+[data-font="atkinson"] { --font-text: "Atkinson Hyperlegible", -apple-system, sans-serif; }
+[data-font="quattro"] { --font-text: "iA Writer Quattro", -apple-system, sans-serif; }
+
 /* ── Base ──
    Unidades: todo en rem (relativo al tamaño de letra base, 1rem = 16px), salvo
    - em: lo que depende de su propio texto (grosor y separación del subrayado);
@@ -73,7 +97,7 @@ body {
   display: flex;
   background: var(--bg);
   color: var(--fg);
-  font: 0.9375rem/1.4 "Iowan Old Style", Palatino, Georgia, serif;
+  font: 0.9375rem/1.4 var(--font-text);
   user-select: none;
 }
 button {

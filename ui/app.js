@@ -11,6 +11,7 @@
 //   "wpm"         -> velocidad (palabras por minuto)
 //   "theme"       -> tema de colores
 //   "fontScale"   -> tamaño de letra, en % del normal
+//   "font"        -> tipo de letra (ver FONTS)
 //   "sidebar", "chart", "context", "natural" -> "1" / "" (ver `toggles`)
 //   "notesDir"    -> carpeta de notas
 //   "markColor"   -> último color de marcatextos usado
@@ -609,6 +610,30 @@ function changeFontSize(direction) {
   buildMenu();
 }
 
+// Tipos de letra: [id, nombre en el menú, grupo]. Las familias están en style.css (--font-text).
+// "serif", "sans" y "quattro" conservan su id de antes para no perder lo ya elegido.
+const FONTS = [
+  ["serif", "Iowan Old Style", "Con serifa"],
+  ["newyork", "New York", "Con serifa"],
+  ["charter", "Charter", "Con serifa"],
+  ["etbook", "ET Book", "Con serifa"],
+  ["sans", "San Francisco", "Sin serifa"],
+  ["atkinson", "Atkinson Hyperlegible", "Sin serifa"],
+  ["quattro", "iA Writer Quattro", "Sin serifa"],
+];
+
+function currentFont() {
+  const saved = localStorage.getItem("font");
+  return FONTS.some(([id]) => id === saved) ? saved : "serif";
+}
+
+function setFont(name) {
+  document.documentElement.dataset.font = name;
+  localStorage.setItem("font", name);
+  if (book && !timer && !busy) scrollToWord(false); // que la palabra actual siga a la vista
+  buildMenu();
+}
+
 function setTheme(name) {
   document.documentElement.dataset.theme = name;
   localStorage.setItem("theme", name);
@@ -685,6 +710,7 @@ document.addEventListener("keydown", (e) => {
 window.addEventListener("DOMContentLoaded", () => {
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "tufte";
   document.documentElement.style.fontSize = fontScale() + "%";
+  document.documentElement.dataset.font = currentFont();
   for (const key in toggles) toggles[key].apply(isOn(key));
   setWpm(wpm);
   buildMenu();

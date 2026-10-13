@@ -116,6 +116,16 @@ Cambios fáciles:
 - Un tema nuevo: 6 colores en `ui/style.css` y una línea en `THEMES` (`ui/app.js`).
 - Tamaño de la palabra: `#word` en `ui/style.css`. Rango de velocidad: `index.html` (`min`/`max`) y `setWpm()`.
 
+## Créditos
+
+- Fuentes incluidas en `ui/fonts`, cada una con su licencia:
+  - **ET Book** (Dmitry Krasny, Bonnie Scranton y Edward Tufte): licencia MIT.
+  - **Atkinson Hyperlegible** (Braille Institute): SIL Open Font License 1.1.
+  - **iA Writer Quattro** (Information Architects, basada en IBM Plex): SIL Open Font License 1.1.
+- Iowan Old Style, New York, Charter y San Francisco son fuentes del sistema macOS.
+- Temas de color basados en Tufte CSS, Solarized, Catppuccin, Gruvbox, Nord, Dracula y
+  obsidian-typewriter.
+
 ## Nota sobre permisos de macOS
 
 La primera vez que FastRead abre un libro de la carpeta Documentos, macOS pide permiso.

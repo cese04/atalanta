@@ -123,3 +123,23 @@ test("estilos del libro: tramos a estilo por palabra y su clase de CSS", () => {
   assert.equal(ui.run("styleClass(3)"), "italic bold");
   assert.equal(ui.run("styleClass(8)"), "smaller");
 });
+
+test("tipo de letra: serifa si no se eligió o no es válido", () => {
+  const ui = loadUI();
+  assert.equal(ui.run("currentFont()"), "serif");
+  ui.storage.set("font", "quattro");
+  assert.equal(ui.run("currentFont()"), "quattro");
+  ui.storage.set("font", "comic-sans");
+  assert.equal(ui.run("currentFont()"), "serif");
+});
+
+test("tipo de letra: el menú agrupa las fuentes con un encabezado por grupo", () => {
+  const ui = loadUI();
+  const items = ui.get('fontItems((text, checked) => ({ text, checked }), { item: "Separator" })');
+  assert.deepEqual(items.map((i) => i.item || (i.enabled === false ? `[${i.text}]` : i.text)), [
+    "[Con serifa]", "Iowan Old Style", "New York", "Charter", "ET Book",
+    "Separator",
+    "[Sin serifa]", "San Francisco", "Atkinson Hyperlegible", "iA Writer Quattro",
+  ]);
+  assert.equal(items.find((i) => i.checked).text, "Iowan Old Style"); // la elegida por defecto
+});

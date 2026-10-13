@@ -72,6 +72,7 @@ async function createMenu() {
         check(t.label, isOn(key), () => setToggle(key, !isOn(key)), t.accelerator)),
       separator,
       { text: "Tema", items: THEMES.map(([id, name]) => check(name, id === theme, () => setTheme(id))) },
+      { text: "Tipo de letra", items: fontItems(check, separator) },
       { text: `Tamaño de letra (${fontScale()} %)`, items: [
         { text: "Más grande", accelerator: "CmdOrCtrl+=", action: () => changeFontSize(1) },
         { text: "Más pequeña", accelerator: "CmdOrCtrl+-", action: () => changeFontSize(-1) },
@@ -98,6 +99,19 @@ async function makeItem(spec) {
   if (spec.items) return Submenu.new({ ...spec, items: await Promise.all(spec.items.map(makeItem)) });
   if ("checked" in spec) return CheckMenuItem.new(spec);
   return MenuItem.new(spec);
+}
+
+// Tipos de letra agrupados: un encabezado (inactivo) por grupo y sus fuentes debajo.
+function fontItems(check, separator) {
+  const items = [];
+  for (const [id, name, group] of FONTS) {
+    if (!items.length || items.at(-1).group !== group) {
+      if (items.length) items.push(separator);
+      items.push({ text: group, enabled: false, group });
+    }
+    items.push({ ...check(name, id === currentFont(), () => setFont(id)), group });
+  }
+  return items.map(({ group, ...item }) => item); // `group` solo sirve para agrupar
 }
 
 // ── Libros recientes: [{ path, title, words }], el más reciente primero ──
