@@ -11,7 +11,7 @@
 //   "wpm"         -> velocidad (palabras por minuto)
 //   "theme"       -> tema de colores
 //   "fontScale"   -> tamaño de letra, en % del normal
-//   "font"        -> tipo de letra (ver FONTS)
+//   "font"        -> tipo de letra elegido (ver FONTS) o "auto": el del tema (ver THEMES)
 //   "sidebar", "chart", "context", "natural" -> "1" / "" (ver `toggles`)
 //   "notesDir"    -> carpeta de notas
 //   "markColor"   -> último color de marcatextos usado
@@ -548,9 +548,10 @@ const fontSize = (el) => parseFloat(getComputedStyle(el).fontSize);
 
 // ── Ajustes (se cambian desde el menú Ver) ──
 
+// [id, nombre en el menú, tipo de letra propio del tema (opcional; ver FONTS)]
 const THEMES = [
-  ["tufte", "Tufte claro"],
-  ["tufte-dark", "Tufte oscuro"],
+  ["tufte", "Tufte claro", "etbook"],
+  ["tufte-dark", "Tufte oscuro", "etbook"],
   ["solarized-light", "Solarized claro"],
   ["solarized-dark", "Solarized oscuro"],
   ["latte", "Catppuccin Latte"],
@@ -559,8 +560,8 @@ const THEMES = [
   ["nord-light", "Nord claro"],
   ["nord", "Nord oscuro"],
   ["dracula", "Dracula"],
-  ["typewriter-light", "Typewriter claro"],
-  ["typewriter-dark", "Typewriter oscuro"],
+  ["typewriter-light", "Typewriter claro", "quattro"],
+  ["typewriter-dark", "Typewriter oscuro", "quattro"],
 ];
 
 // Ajustes de sí/no: nombre en el menú, valor por defecto, atajo y qué hacer al cambiarlos.
@@ -622,21 +623,40 @@ const FONTS = [
   ["quattro", "iA Writer Quattro", "Sin serifa"],
 ];
 
-function currentFont() {
+// "auto" (según el tema) o el id de una fuente elegida a propósito.
+function fontMode() {
   const saved = localStorage.getItem("font");
-  return FONTS.some(([id]) => id === saved) ? saved : "serif";
+  return FONTS.some(([id]) => id === saved) ? saved : "auto";
 }
 
+// Fuente propia de un tema; Iowan Old Style ("serif") si no tiene.
+function themeFont(theme = localStorage.getItem("theme") || "tufte") {
+  return THEMES.find(([id]) => id === theme)?.[2] || "serif";
+}
+
+// La fuente que se usa: la elegida o, en "auto", la del tema actual.
+function currentFont() {
+  return fontMode() === "auto" ? themeFont() : fontMode();
+}
+
+const fontName = (id) => FONTS.find(([f]) => f === id)[1];
+
+// `name`: el id de una fuente, o "auto" para usar la del tema.
 function setFont(name) {
-  document.documentElement.dataset.font = name;
   localStorage.setItem("font", name);
-  if (book && !timer && !busy) scrollToWord(false); // que la palabra actual siga a la vista
+  applyFont();
   buildMenu();
+}
+
+function applyFont() {
+  document.documentElement.dataset.font = currentFont();
+  if (book && !timer && !busy) scrollToWord(false); // que la palabra actual siga a la vista
 }
 
 function setTheme(name) {
   document.documentElement.dataset.theme = name;
   localStorage.setItem("theme", name);
+  applyFont(); // en "Según el tema", la letra cambia con el tema
   buildMenu();
 }
 

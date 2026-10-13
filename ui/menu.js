@@ -101,15 +101,18 @@ async function makeItem(spec) {
   return MenuItem.new(spec);
 }
 
-// Tipos de letra agrupados: un encabezado (inactivo) por grupo y sus fuentes debajo.
+// Tipos de letra: "Según el tema" y luego las fuentes agrupadas, con un encabezado
+// (inactivo) por grupo. Una fuente solo aparece marcada si se eligió a propósito.
 function fontItems(check, separator) {
-  const items = [];
+  const items = [
+    { ...check(`Según el tema (${fontName(themeFont())})`, fontMode() === "auto", () => setFont("auto")), group: "" },
+  ];
   for (const [id, name, group] of FONTS) {
     if (!items.length || items.at(-1).group !== group) {
       if (items.length) items.push(separator);
       items.push({ text: group, enabled: false, group });
     }
-    items.push({ ...check(name, id === currentFont(), () => setFont(id)), group });
+    items.push({ ...check(name, id === fontMode(), () => setFont(id)), group });
   }
   return items.map(({ group, ...item }) => item); // `group` solo sirve para agrupar
 }

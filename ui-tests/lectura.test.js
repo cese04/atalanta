@@ -124,22 +124,31 @@ test("estilos del libro: tramos a estilo por palabra y su clase de CSS", () => {
   assert.equal(ui.run("styleClass(8)"), "smaller");
 });
 
-test("tipo de letra: serifa si no se eligió o no es válido", () => {
+test("tipo de letra: según el tema, salvo que se elija una a propósito", () => {
   const ui = loadUI();
-  assert.equal(ui.run("currentFont()"), "serif");
-  ui.storage.set("font", "quattro");
-  assert.equal(ui.run("currentFont()"), "quattro");
+  assert.equal(ui.run("fontMode()"), "auto");          // sin elegir: según el tema
+  assert.equal(ui.run("currentFont()"), "etbook");     // tema por defecto (Tufte) -> ET Book
+  ui.storage.set("theme", "typewriter-dark");
+  assert.equal(ui.run("currentFont()"), "quattro");    // Typewriter -> iA Writer Quattro
+  ui.storage.set("theme", "nord");
+  assert.equal(ui.run("currentFont()"), "serif");      // tema sin fuente propia -> Iowan
+  ui.storage.set("font", "atkinson");
+  assert.equal(ui.run("currentFont()"), "atkinson");   // elegida a propósito: se respeta
+  ui.storage.set("theme", "tufte");
+  assert.equal(ui.run("currentFont()"), "atkinson");   // aunque cambie el tema
   ui.storage.set("font", "comic-sans");
-  assert.equal(ui.run("currentFont()"), "serif");
+  assert.equal(ui.run("fontMode()"), "auto");          // valor no válido: según el tema
 });
 
 test("tipo de letra: el menú agrupa las fuentes con un encabezado por grupo", () => {
   const ui = loadUI();
   const items = ui.get('fontItems((text, checked) => ({ text, checked }), { item: "Separator" })');
   assert.deepEqual(items.map((i) => i.item || (i.enabled === false ? `[${i.text}]` : i.text)), [
+    "Según el tema (ET Book)",
+    "Separator",
     "[Con serifa]", "Iowan Old Style", "New York", "Charter", "ET Book",
     "Separator",
     "[Sin serifa]", "San Francisco", "Atkinson Hyperlegible", "iA Writer Quattro",
   ]);
-  assert.equal(items.find((i) => i.checked).text, "Iowan Old Style"); // la elegida por defecto
+  assert.equal(items.find((i) => i.checked).text, "Según el tema (ET Book)"); // marcado por defecto
 });
