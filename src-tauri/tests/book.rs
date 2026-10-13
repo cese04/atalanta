@@ -28,7 +28,7 @@ pub fn write_epub(dir: &Path, name: &str, index: Index) -> String {
         Index::None => "sin-indice.opf",
     };
     let mut files = vec![("mimetype".to_string(), source.join("mimetype"))]; // va primero en un EPUB
-    for path in ["META-INF/container.xml", "OEBPS/toc.ncx", "OEBPS/nav.xhtml", "OEBPS/text/cap1.xhtml", "OEBPS/text/cap2.xhtml"] {
+    for path in ["META-INF/container.xml", "OEBPS/toc.ncx", "OEBPS/nav.xhtml", "OEBPS/text/cap1.xhtml", "OEBPS/text/cap2.xhtml", "OEBPS/images/cover.png"] {
         files.push((path.to_string(), source.join(path)));
     }
     files.push(("OEBPS/content.opf".to_string(), Path::new(RESOURCES).join("opf").join(opf)));

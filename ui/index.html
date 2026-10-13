@@ -8,6 +8,7 @@
 <body>
   <!-- Panel izquierdo: libro e índice. Los ajustes están en el menú principal (menu.js). -->
   <aside>
+    <img id="coverThumb" alt="" hidden>
     <h1 id="title"></h1>
     <p id="info"></p>
     <ul id="toc"></ul>
@@ -29,8 +30,11 @@
           <span class="side"><span id="right"></span><span id="next"></span></span>
         </div>
       </div>
-      <!-- El libro completo como texto; se llena desde app.js -->
-      <div id="page"></div>
+      <!-- El libro completo como texto: la portada y, en #text, un <p> por párrafo (app.js) -->
+      <div id="page">
+        <figure id="cover" hidden><img alt="Portada"></figure>
+        <div id="text"></div>
+      </div>
       <p id="modeHint">Modo subrayado · selecciona un fragmento · clic en un subrayado para editarlo · <kbd>Esc</kbd> para salir</p>
     </div>
 

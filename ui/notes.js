@@ -12,6 +12,7 @@ let highlights = []; // [{ id, start, end, text, note, color, chapter, created }
 let notesDir = localStorage.getItem("notesDir") || "";
 let highlighting = false; // modo subrayado
 let editing = null;       // subrayado abierto en el editor
+let coverSaved = false;   // la portada del libro abierto está en <carpeta>/portadas/
 
 // Colores de marcatextos (los valores están en style.css). El primero es el de siempre.
 const MARK_COLORS = ["amarillo", "verde", "azul", "rosa"];
@@ -132,6 +133,7 @@ function clipsMarkdown(source, clips) {
 // las Bases o Dataview pueden listarlas en una tabla):
 //   progress  % leído (0-100)        wpm       velocidad (palabras por minuto)
 //   started   fecha en que empezaste  finished  fecha en que llegaste al final
+//   cover     enlace a la portada, guardada en portadas/ (ver saveCover)
 // progress y wpm se actualizan en cada pausa; started y finished se escriben una sola vez.
 
 async function saveReading() {
@@ -143,11 +145,33 @@ async function saveReading() {
     const keep = { started: startedOn() };
     if (progress === 100) keep.finished = today();
     const info = { title: book.title, author: book.author, source: path.split(/[\\/]/).pop() };
-    const md = updateProperties(old || frontmatter(info), { progress, wpm }, keep);
+    const set = { progress, wpm };
+    if (coverSaved) set.cover = `"[[${notesName()}.jpg]]"`; // portada (en portadas/)
+    const md = updateProperties(old || frontmatter(info), set, keep);
     if (md !== old) await invoke("write_text", { path: file, content: md });
   } catch (e) {
     notify("No se pudo actualizar la nota: " + e);
   }
+}
+
+// Guarda la miniatura de la portada en <carpeta de notas>/portadas/<Título>.jpg (si aún no
+// está) y la enlaza en la nota con la propiedad `cover`, que las Bases de Obsidian muestran
+// en la vista de tarjetas.
+async function saveCover(blob) {
+  coverSaved = false;
+  if (!notesDir) return;
+  const file = `${notesDir}/portadas/${notesName()}.jpg`;
+  try {
+    await invoke("read_bytes", { path: file }); // ya existe: no se reescribe
+  } catch {
+    try {
+      await invoke("write_bytes", { path: file, bytes: Array.from(new Uint8Array(await blob.arrayBuffer())) });
+    } catch (e) {
+      return notify("No se pudo guardar la portada: " + e);
+    }
+  }
+  coverSaved = true;
+  await saveReading();
 }
 
 // Fecha en que se empezó el libro: la primera vez que se abrió (se recuerda por ruta).

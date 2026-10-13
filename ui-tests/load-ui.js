@@ -21,6 +21,11 @@ function loadUI() {
   const handlers = {   // comandos de Rust simulados
     read_text: ({ path }) => files[path] ?? "",
     write_text: ({ path, content }) => { files[path] = content; },
+    read_bytes: ({ path }) => {
+      if (!(path in files)) throw "no existe";
+      return files[path];
+    },
+    write_bytes: ({ path, bytes }) => { files[path] = bytes; },
   };
 
   const context = {

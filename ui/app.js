@@ -85,6 +85,70 @@ async function openBook(p) {
   chosen = false;
   addRecent();
   saveReading(); // crea la nota del libro (si no existe) con su fecha de inicio
+  loadCover();
+}
+
+// ── Portada ──
+// Al principio del texto (en la pausa) y en el panel del índice; además se guarda como
+// miniatura en la carpeta de notas y se enlaza en la nota del libro (ver saveCover en notes.js).
+
+const COVER_HEIGHT = 900; // alto máximo de la miniatura, en píxeles
+let coverUrl = null;      // miniatura del libro abierto (URL blob:)
+
+async function loadCover() {
+  const opened = book;
+  setCover(null);
+  const original = book.coverBlob || (await coverFromFile(path)); // PDF: la primera página (pdf-reader.js)
+  const thumb = original && (await shrinkImage(original, COVER_HEIGHT));
+  if (!thumb || book !== opened) return; // sin portada, o ya se abrió otro libro
+  setCover(thumb);
+  await saveCover(thumb.blob);
+}
+
+async function coverFromFile(file) {
+  const bytes = new Uint8Array(await invoke("book_cover", { path: file }));
+  return bytes.length ? new Blob([bytes], { type: imageType(bytes) }) : null;
+}
+
+// Tipo de imagen según sus primeros bytes (dentro del libro no siempre se indica).
+function imageType(bytes) {
+  if (bytes[0] === 0xff && bytes[1] === 0xd8) return "image/jpeg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50) return "image/png";
+  if (bytes[0] === 0x47 && bytes[1] === 0x49) return "image/gif";
+  return "";
+}
+
+// Reduce una imagen a `height` px de alto como máximo, en JPEG: { blob, width, height } o null.
+async function shrinkImage(blob, height) {
+  try {
+    const image = await createImageBitmap(blob);
+    const scale = Math.min(1, height / image.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(image.width * scale);
+    canvas.height = Math.round(image.height * scale);
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#fff"; // fondo blanco para las imágenes con transparencia
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const jpeg = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+    return jpeg && { blob: jpeg, width: canvas.width, height: canvas.height };
+  } catch {
+    return null; // imagen que no se puede leer
+  }
+}
+
+// Muestra la portada (o la quita, con null). Mantiene a la vista la palabra actual aunque
+// la portada empuje el texto hacia abajo.
+function setCover(thumb) {
+  const before = $("cur")?.getBoundingClientRect().top;
+  if (coverUrl) URL.revokeObjectURL(coverUrl);
+  coverUrl = thumb ? URL.createObjectURL(thumb.blob) : null;
+  for (const img of [$("cover").querySelector("img"), $("coverThumb")]) {
+    img.src = coverUrl || "";
+    if (thumb) Object.assign(img, { width: thumb.width, height: thumb.height }); // reserva su espacio
+  }
+  $("cover").hidden = $("coverThumb").hidden = !coverUrl;
+  if (before !== undefined && $("cur")) $("page").scrollTop += $("cur").getBoundingClientRect().top - before;
 }
 
 // ── Índice ──
@@ -160,7 +224,7 @@ function renderPage() {
     p.className = paragraphClass(i, chapters, breaks);
     fragment.append(p);
   });
-  $("page").replaceChildren(fragment);
+  $("text").replaceChildren(fragment);
   marked = pos < book.words.length ? paragraphOf(pos) : -1;
 }
 
@@ -243,7 +307,7 @@ function paragraphNodes(i) {
 // Vuelve a dibujar los párrafos entre dos palabras (p. ej. tras cambiar un subrayado).
 function refreshParagraphs(from, to) {
   for (let i = paragraphOf(from); i <= paragraphOf(to); i++) {
-    $("page").children[i].replaceChildren(...paragraphNodes(i));
+    $("text").children[i].replaceChildren(...paragraphNodes(i));
   }
 }
 
@@ -266,8 +330,8 @@ function paragraphOf(index) {
 let marked = -1; // párrafo que tiene la marca ahora
 function markWord() {
   const i = paragraphOf(pos);
-  if (marked >= 0 && marked !== i) $("page").children[marked].replaceChildren(...paragraphNodes(marked));
-  $("page").children[i].replaceChildren(...paragraphNodes(i));
+  if (marked >= 0 && marked !== i) $("text").children[marked].replaceChildren(...paragraphNodes(marked));
+  $("text").children[i].replaceChildren(...paragraphNodes(i));
   marked = i;
 }
 
@@ -283,12 +347,12 @@ function scrollToWord(always) {
 // Para un punto del texto (nodo, desplazamiento): su párrafo y el texto anterior dentro de él.
 function pointInPage(node, offset) {
   const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
-  const p = element?.closest("#page > p");
+  const p = element?.closest("#text > p");
   if (!p) return null;
   const range = document.createRange();
   range.setStart(p, 0);
   range.setEnd(node, offset);
-  return { i: Array.prototype.indexOf.call($("page").children, p), before: range.toString(), length: p.textContent.length };
+  return { i: Array.prototype.indexOf.call($("text").children, p), before: range.toString(), length: p.textContent.length };
 }
 
 // Número de la palabra en un punto del texto: la que tiene tantos espacios
@@ -575,6 +639,8 @@ const toggles = {
              apply: (on) => document.body.classList.toggle("chart", on) },
   context: { label: "Palabras vecinas", on: false,
              apply: (on) => document.body.classList.toggle("context", on) },
+  cover:   { label: "Portada en el índice", on: true,
+             apply: (on) => document.body.classList.toggle("nocover", !on) },
   natural: { label: "Ritmo natural", on: true,
              apply: (on) => { natural = on; if (book) show(); } },
 };

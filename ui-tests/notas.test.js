@@ -166,3 +166,32 @@ test("propiedades de lectura: sin carpeta de notas no se escribe nada", async ()
   await ui.run("saveReading()");
   assert.deepEqual(Object.keys(ui.files), []);
 });
+
+test("portada: tipo de imagen según sus primeros bytes", () => {
+  const ui = loadUI();
+  assert.equal(ui.run("imageType([0xff, 0xd8, 0xff])"), "image/jpeg");
+  assert.equal(ui.run("imageType([0x89, 0x50, 0x4e, 0x47])"), "image/png");
+  assert.equal(ui.run("imageType([0x47, 0x49, 0x46])"), "image/gif");
+  assert.equal(ui.run("imageType([1, 2, 3])"), "");
+});
+
+test("portada: se guarda una vez en portadas/ y la nota la enlaza con `cover`", async () => {
+  const ui = loadUI();
+  ui.run(`notesDir = "/Vault"; path = "/Libros/Demian.epub"; wpm = 300; pos = 0`);
+  ui.run(`book = ${JSON.stringify(bookFrom("Uno dos tres", { title: "Demian" }))}`);
+  const blob = "({ arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer })";
+  await ui.run(`saveCover(${blob})`);
+  assert.deepEqual(ui.files["/Vault/portadas/Demian.jpg"], [1, 2, 3]);
+  assert.ok(ui.files["/Vault/Demian.md"].includes('cover: "[[Demian.jpg]]"'));
+
+  ui.files["/Vault/portadas/Demian.jpg"] = [9]; // ya existe (p. ej. la cambiaste a mano): no se reescribe
+  await ui.run(`saveCover(${blob})`);
+  assert.deepEqual(ui.files["/Vault/portadas/Demian.jpg"], [9]);
+});
+
+test("portada: sin carpeta de notas no se guarda nada", async () => {
+  const ui = loadUI();
+  ui.run(`notesDir = ""; book = ${JSON.stringify(bookFrom("Uno", { title: "Demian" }))}`);
+  await ui.run("saveCover({ arrayBuffer: async () => new ArrayBuffer(1) })");
+  assert.deepEqual(Object.keys(ui.files), []);
+});

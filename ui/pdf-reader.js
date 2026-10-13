@@ -27,12 +27,29 @@ async function openPdf(path, progress) {
     page.cleanup();
   }
   const outline = await pdfOutline(pdf);
+  const cover = await pdfCover(pdf);
   const info = (await pdf.getMetadata().catch(() => null))?.info || {};
   await task.destroy(); // libera la memoria del PDF
   const title = String(info.Title || "").trim() || path.split(/[\\/]/).pop().replace(/\.pdf$/i, "");
   const book = buildPdfBook(pages, outline, title, String(info.Author || "").trim());
   if (!book.words.length) throw "el PDF no tiene texto (¿está escaneado?)";
+  book.coverBlob = cover; // la portada de un PDF es su primera página (ver loadCover en app.js)
   return book;
+}
+
+// La primera página dibujada como imagen (JPEG), o null si no se puede.
+async function pdfCover(pdf) {
+  try {
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: COVER_HEIGHT / page.getViewport({ scale: 1 }).height });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    await page.render({ canvas, canvasContext: canvas.getContext("2d"), viewport }).promise;
+    return await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+  } catch {
+    return null;
+  }
 }
 
 // Marcadores del PDF -> [{ title, level, page }] (página empezando en 0).

@@ -148,14 +148,14 @@ fn nav_items(ol: roxmltree::Node, level: usize, base: &str, out: &mut Vec<Entry>
     }
 }
 
-fn read_zip(zip: &mut zip::ZipArchive<File>, name: &str) -> Result<String, String> {
+pub(crate) fn read_zip(zip: &mut zip::ZipArchive<File>, name: &str) -> Result<String, String> {
     let mut entry = zip.by_name(name).map_err(|e| format!("{name}: {e}"))?;
     let mut s = String::new();
     entry.read_to_string(&mut s).map_err(|e| e.to_string())?;
     Ok(s)
 }
 
-fn parse_xml(xml: &str) -> Result<roxmltree::Document<'_>, String> {
+pub(crate) fn parse_xml(xml: &str) -> Result<roxmltree::Document<'_>, String> {
     let opts = roxmltree::ParsingOptions { allow_dtd: true, ..Default::default() };
     roxmltree::Document::parse_with_options(xml, opts).map_err(|e| e.to_string())
 }
@@ -167,7 +167,7 @@ fn node_text(node: roxmltree::Node) -> String {
 }
 
 /// Une una carpeta con una ruta relativa: ("OEBPS/text", "../img/a.png") -> "OEBPS/img/a.png"
-fn join(base: &str, href: &str) -> String {
+pub(crate) fn join(base: &str, href: &str) -> String {
     let href = href.replace("%20", " ");
     let mut parts: Vec<&str> = base.split('/').filter(|p| !p.is_empty()).collect();
     for p in href.split('/') {
@@ -181,7 +181,7 @@ fn join(base: &str, href: &str) -> String {
 }
 
 /// Carpeta que contiene un archivo: "OEBPS/content.opf" -> "OEBPS"
-fn parent(path: &str) -> String {
+pub(crate) fn parent(path: &str) -> String {
     path.rsplit_once('/').map(|(dir, _)| dir.to_string()).unwrap_or_default()
 }
 

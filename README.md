@@ -57,6 +57,12 @@ Obsidian (Bases o Dataview) puede reunir en una tabla. Las que añadas tú se co
 | `wpm` | velocidad (palabras por minuto) | en cada pausa |
 | `started` | fecha en que abriste el libro por primera vez | una sola vez |
 | `finished` | fecha en que llegaste al final | una sola vez |
+| `cover` | enlace a la portada, guardada en `portadas/` | al abrir el libro |
+
+La portada (de los metadatos del EPUB o MOBI, o la primera página de un PDF) se ve al
+principio del texto en la pausa y en el panel del índice (Ver › Portada en el índice), y se
+guarda como miniatura en `portadas/` dentro de la carpeta de notas. Con una Base de Obsidian
+en vista de tarjetas, las notas de tus libros se ven con su portada.
 
 ## Importar de Kindle y Kobo
 
@@ -117,8 +123,9 @@ Cada parte tiene su carpeta de pruebas:
 | `ui/menu.js` | Menú principal y libros recientes |
 | `src-tauri/src/book.rs` | Lee EPUB/MOBI: palabras, párrafos, índice, título y autor |
 | `src-tauri/src/kobo.rs` | Lee los subrayados de la base de datos de un Kobo |
+| `src-tauri/src/cover.rs` | Extrae la portada de un EPUB o MOBI |
 | `src-tauri/src/chapters.rs` | Busca en qué capítulo de un libro está cada cita (para Kindle) |
-| `src-tauri/src/main.rs` | Arranca la app; comandos `open_book`, `kobo_highlights`, `find_chapters`, `read_bytes`, `read_text`, `write_text` |
+| `src-tauri/src/main.rs` | Arranca la app; comandos `open_book`, `kobo_highlights`, `find_chapters`, `book_cover`, `read_bytes`, `write_bytes`, `read_text`, `write_text` |
 
 Cambios fáciles:
 
