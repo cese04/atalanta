@@ -34,6 +34,7 @@ let pausedAt = 0;  // cuándo se pausó (0: no en esta sesión, p. ej. al abrir 
 let chosen = false; // si en la pausa se eligió otra palabra (clic, flechas, índice…)
 let natural = true; // "Ritmo natural" (ver rhythm.js)
 let speech = new Uint8Array(0); // 1 = la palabra es diálogo (ver findSpeech en rhythm.js)
+let wordStyles = new Uint8Array(0); // estilo de cada palabra del libro en la vista de pausa (cursiva, negrita…)
 let wpm = Number(localStorage.getItem("wpm")) || 300;
 let lengths = [];  // palabras de cada capítulo (mismo orden que book.toc)
 
@@ -70,6 +71,7 @@ async function openBook(p) {
     if (!other || ch.level < other.level) chapterStarts.set(ch.word, ch); // gana el de nivel más alto
   }
   speech = findSpeech();
+  wordStyles = expandStyles(book.styles, book.words.length);
   await loadHighlights();
   renderToc();
   renderPage();
@@ -169,22 +171,35 @@ function paragraphClass(i, chapters, breaks) {
   return classes.filter(Boolean).join(" ");
 }
 
-// Contenido de un párrafo: texto normal, subrayados (<span class="hl" data-color="…">,
-// que se ven como marcatextos) y la palabra actual (<span id="cur">).
+// Estilos del libro dentro del texto (los mismos valores que STYLE_* en book.rs) y su clase de CSS.
+const STYLE_CLASSES = [[1, "italic"], [2, "bold"], [4, "larger"], [8, "smaller"]];
+const styleClass = (style) => STYLE_CLASSES.filter(([bit]) => style & bit).map(([, name]) => name).join(" ");
+
+// Tramos de estilo del libro [[desde, hasta sin incluir, estilo], …] -> estilo de cada palabra.
+function expandStyles(runs, count) {
+  const styles = new Uint8Array(count);
+  for (const [from, to, style] of runs) styles.fill(style, from, to);
+  return styles;
+}
+
+// Contenido de un párrafo: texto normal, texto con estilo del libro (<span class="italic">…),
+// subrayados (<span class="hl" data-color="…">, que se ven como marcatextos) y la palabra
+// actual (<span id="cur">).
 function paragraphNodes(i) {
   const start = book.paragraphs[i];
   const end = paragraphEnd(i);
   const marks = highlights.filter((h) => h.start < end && h.end >= start);
-  if (!marks.length && (pos < start || pos >= end)) return [paragraphText(i)];
+  const styled = wordStyles.subarray(start, end).some(Boolean);
+  if (!marks.length && !styled && (pos < start || pos >= end)) return [paragraphText(i)];
 
   // Agrupa palabras seguidas con el mismo estilo en un solo nodo.
   const nodes = [];
-  let words = [], key = null, mark = null, current = false, lastMark = null;
-  const span = (text, mark) => {
+  let words = [], key = null, mark = null, current = false, style = 0, lastMark = null;
+  const span = (text, mark, style) => {
     const node = document.createElement("span");
     node.textContent = text;
+    node.className = [mark ? "hl" : "", styleClass(style)].filter(Boolean).join(" ");
     if (mark) {
-      node.className = "hl";
       node.dataset.id = mark.id;
       node.dataset.color = markColor(mark);
     }
@@ -193,12 +208,12 @@ function paragraphNodes(i) {
   const flush = () => {
     if (!words.length) return;
     // El espacio entre dos trozos del mismo subrayado también va marcado, para que no queden huecos.
-    if (nodes.length) nodes.push(mark && mark === lastMark ? span(" ", mark) : " ");
+    if (nodes.length) nodes.push(mark && mark === lastMark ? span(" ", mark, 0) : " ");
     const text = words.join(" ");
-    if (!mark && !current) {
+    if (!mark && !current && !style) {
       nodes.push(text);
     } else {
-      const node = span(text, mark);
+      const node = span(text, mark, style);
       if (current) node.id = "cur";
       nodes.push(node);
     }
@@ -207,12 +222,13 @@ function paragraphNodes(i) {
   };
   for (let w = start; w < end; w++) {
     const m = marks.find((h) => w >= h.start && w <= h.end) || null;
-    const k = (m ? m.id : "") + (w === pos ? "*" : "");
+    const k = (m ? m.id : "") + "|" + wordStyles[w] + (w === pos ? "*" : "");
     if (k !== key) {
       flush();
       key = k;
       mark = m;
       current = w === pos;
+      style = wordStyles[w];
     }
     words.push(book.words[w]);
   }

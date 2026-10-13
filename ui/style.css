@@ -228,6 +228,14 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 #page p.h3 { font-size: 1.15em; font-style: italic; margin: 1em 0 0.6em; }
 #page p.quote { margin-left: 2em; margin-right: 2em; font-size: 0.95em; }
 
+/* Estilos del libro dentro del texto (solo en la pausa; en la lectura, la cursiva es el diálogo).
+   Dentro de un título, que ya va en cursiva, la cursiva del libro se ve recta para seguir destacando. */
+#page .italic { font-style: italic; }
+#page .bold { font-weight: 600; }
+#page .larger { font-size: 1.15em; }
+#page .smaller { font-size: 0.85em; }
+#page p.h1 .italic, #page p.h2 .italic, #page p.h3 .italic { font-style: normal; }
+
 /* Inicio de capítulo: una línea fina y espacio. */
 #page p.chapter { margin-top: 3em; padding-top: 2.5em; border-top: 1px solid var(--rule); }
 #page p.chapter:first-child { margin-top: 0; padding-top: 0; border-top: none; }

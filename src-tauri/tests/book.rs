@@ -145,6 +145,39 @@ fn blockquote_como_sangria_no_es_cita() {
 }
 
 #[test]
+fn estilos_dentro_del_texto() {
+    let mut text = Text::default();
+    text.add_html("", include_str!("resources/estilos.xhtml"));
+    let styled: Vec<(&str, u8)> = text.words.iter().map(String::as_str).zip(text.word_styles.iter().copied()).collect();
+    let (i, b, big, small) = (STYLE_ITALIC, STYLE_BOLD, STYLE_LARGER, STYLE_SMALLER);
+    assert_eq!(
+        styled,
+        [
+            ("normal", 0), ("cursiva", i), ("negrita", b), ("ambas", b | i), ("normal", 0),
+            ("span-cursiva", i), ("span-negrita", b),
+            ("grande", big), ("chica", small), ("normal", 0), ("big", big), ("small", small),
+            ("Capital", 0), // "Ca<b>pi</b>tal" es una sola palabra: queda con el estilo de su comienzo
+            ("fin", 0),
+        ]
+    );
+}
+
+#[test]
+fn estilo_de_casi_todo_el_libro_se_ignora() {
+    // Una <b> sin cerrar vuelve negrita casi todo el texto: se ignora. La cursiva (1 de 4) se queda.
+    let mut text = Text::default();
+    text.add_html("libro", "<p><i>Uno</i> <b>dos</p><p>tres cuatro</p>");
+    let book = text.into_book(String::new(), String::new(), vec![]);
+    assert_eq!(book.styles, [(0, 1, STYLE_ITALIC)]);
+}
+
+#[test]
+fn estilos_agrupados_en_tramos() {
+    assert_eq!(style_runs(&[0, 1, 1, 0, 2, 3, 3]), [(1, 3, 1), (4, 5, 2), (5, 7, 3)]);
+    assert!(style_runs(&[0, 0]).is_empty());
+}
+
+#[test]
 fn html_a_texto_plano() {
     assert_eq!(plain_text("<div><p>Uno <b>dos</b>.</p><p>Tres&nbsp;cuatro.</p></div>"), "Uno dos.\n\nTres cuatro.");
     assert_eq!(plain_text("Sin etiquetas."), "Sin etiquetas.");
@@ -160,4 +193,6 @@ fn rutas_y_atributos() {
     assert_eq!(parent("OEBPS/content.opf"), "OEBPS");
     assert_eq!(attr(r#"p id="x" class='y'"#, "class"), Some("y"));
     assert_eq!(attr(r#"p data-id="x""#, "id"), None);
+    assert_eq!(attr("font size=4", "size"), Some("4")); // sin comillas, como en algunos MOBI
+    assert_eq!(attr("br size=4/", "size"), Some("4"));
 }

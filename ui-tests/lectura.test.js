@@ -114,3 +114,12 @@ test("formato de cada párrafo en la vista de pausa", () => {
   const classes = ui.get("book.paragraphs.map((_, i) => paragraphClass(i, new Set(book.toc.map((c) => c.word)), new Set(book.scene_breaks)))");
   assert.deepEqual(classes, ["h1 chapter", "", "quote", "separator", "scene"]);
 });
+
+test("estilos del libro: tramos a estilo por palabra y su clase de CSS", () => {
+  const ui = loadUI();
+  assert.deepEqual(ui.get("Array.from(expandStyles([[1, 3, 1], [4, 5, 6]], 6))"), [0, 1, 1, 0, 6, 0]);
+  assert.equal(ui.run("styleClass(0)"), "");
+  assert.equal(ui.run("styleClass(1)"), "italic");
+  assert.equal(ui.run("styleClass(3)"), "italic bold");
+  assert.equal(ui.run("styleClass(8)"), "smaller");
+});

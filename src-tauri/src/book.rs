@@ -18,6 +18,7 @@ pub struct Book {
     pub paragraphs: Vec<usize>, // número de la primera palabra de cada párrafo
     pub kinds: Vec<&'static str>, // tipo de cada párrafo: "h1", "h2", "h3" (títulos), "quote" (cita) o ""
     pub scene_breaks: Vec<usize>, // párrafos precedidos por un separador <hr/>
+    pub styles: Vec<(usize, usize, u8)>, // tramos de palabras con estilo: (desde, hasta sin incluir, STYLE_*)
     pub toc: Vec<Chapter>,
 }
 
@@ -230,6 +231,12 @@ fn mobi_links(html: &str) -> Vec<(String, usize)> {
 
 // ─────────────────────── HTML -> palabras ───────────────────────
 
+// Estilo de una palabra (se combinan sumándolos): para la vista de pausa.
+pub const STYLE_ITALIC: u8 = 1;
+pub const STYLE_BOLD: u8 = 2;
+pub const STYLE_LARGER: u8 = 4;
+pub const STYLE_SMALLER: u8 = 8;
+
 /// Etiquetas que no separan palabras (p. ej. la letra capital en <span>L</span>a).
 const INLINE: &[&str] = &[
     "a", "b", "i", "u", "s", "em", "strong", "span", "small", "big", "sup", "sub", "font",
@@ -250,6 +257,8 @@ struct Text {
     heading_level: usize,            // dentro de <h1>-<h6> (0: fuera)
     quote_depth: usize,              // dentro de cuántos <blockquote>
     scene_break: bool,               // hubo un <hr/> antes del siguiente párrafo
+    word_styles: Vec<u8>,            // estilo de cada palabra (STYLE_*)
+    style_stack: Vec<(String, u8, i8)>, // etiquetas abiertas que dan estilo: (nombre, STYLE_*, tamaño)
 }
 
 impl Text {
@@ -260,6 +269,7 @@ impl Text {
         self.glue = false;
         self.heading_level = 0;
         self.quote_depth = 0;
+        self.style_stack.clear();
         let mut skip = false; // dentro de <head>, <script> o <style>
         let mut heading: Option<(usize, usize, String)> = None; // (nivel, palabra, título)
         let mut rest = html;
@@ -289,6 +299,7 @@ impl Text {
                     h.2.push(' ');
                 }
             }
+            self.track_style(&name, tag, closing);
             if let Some(level) = name.strip_prefix('h').and_then(|n| n.parse::<usize>().ok()).filter(|l| (1..=6).contains(l)) {
                 self.heading_level = if closing { 0 } else { level };
             }
@@ -343,10 +354,63 @@ impl Text {
                         self.new_paragraph = false;
                     }
                     self.words.push(word.to_string());
+                    self.word_styles.push(self.style());
                 }
             }
         }
         self.glue = !text.trim().is_empty() && !text.ends_with(char::is_whitespace);
+    }
+
+    /// Lleva la cuenta de las etiquetas abiertas que dan estilo (cursiva, negrita, tamaño).
+    fn track_style(&mut self, name: &str, tag: &str, closing: bool) {
+        if closing {
+            if let Some(i) = self.style_stack.iter().rposition(|(n, ..)| n == name) {
+                self.style_stack.remove(i);
+            }
+            return;
+        }
+        if tag.ends_with('/') {
+            return; // <br/>, <img/>…: no abren nada
+        }
+        let mut style = match name {
+            "em" | "i" | "cite" | "dfn" | "var" => STYLE_ITALIC,
+            "strong" | "b" => STYLE_BOLD,
+            _ => 0,
+        };
+        let css = attr(tag, "style").unwrap_or("").to_ascii_lowercase().replace(' ', "");
+        if css.contains("font-style:italic") {
+            style |= STYLE_ITALIC;
+        }
+        if css.contains("font-weight:bold") || css.contains("font-weight:700") || css.contains("font-weight:600") {
+            style |= STYLE_BOLD;
+        }
+        let size = match name {
+            "big" => 1,
+            "small" => -1,
+            // MOBI: <font size="5"> (3 es el normal) o <font size="+1">
+            "font" => match attr(tag, "size") {
+                Some(v) if v.starts_with('+') || v.starts_with('-') => v.parse::<i8>().unwrap_or(0),
+                Some(v) => v.parse::<i8>().map_or(0, |n| n - 3),
+                None => 0,
+            },
+            _ => 0,
+        };
+        if style != 0 || size != 0 {
+            self.style_stack.push((name.to_string(), style, size));
+        }
+    }
+
+    /// Estilo actual, según las etiquetas abiertas.
+    fn style(&self) -> u8 {
+        let mut style = self.style_stack.iter().fold(0, |acc, (_, s, _)| acc | s);
+        let size: i32 = self.style_stack.iter().map(|(_, _, z)| *z as i32).sum();
+        if size > 0 {
+            style |= STYLE_LARGER;
+        }
+        if size < 0 {
+            style |= STYLE_SMALLER;
+        }
+        style
     }
 
     /// Tipo del párrafo que empieza ahora: título (según su nivel; h4-h6 cuentan como h3),
@@ -381,6 +445,15 @@ impl Text {
         if kinds.iter().filter(|k| **k == "quote").count() * 10 > kinds.len() * 3 {
             kinds.iter_mut().filter(|k| **k == "quote").for_each(|k| *k = "");
         }
+        // Lo mismo con los estilos: si uno cubre más del 30 % de las palabras, es el estilo base
+        // del libro o una etiqueta sin cerrar que "contagia" el resto (p. ej. un <b> en un MOBI),
+        // no algo que se quiera destacar. Se ignora en este libro.
+        let mut word_styles = self.word_styles;
+        for bit in [STYLE_ITALIC, STYLE_BOLD, STYLE_LARGER, STYLE_SMALLER] {
+            if word_styles.iter().filter(|s| **s & bit != 0).count() * 10 > word_styles.len() * 3 {
+                word_styles.iter_mut().for_each(|s| *s &= !bit);
+            }
+        }
         Book {
             title,
             author,
@@ -389,9 +462,25 @@ impl Text {
             paragraphs: self.paragraphs,
             kinds,
             scene_breaks: self.scene_breaks,
+            styles: style_runs(&word_styles),
             toc,
         }
     }
+}
+
+/// Agrupa los estilos de cada palabra en tramos: [0, 1, 1, 0] -> [(1, 3, 1)].
+fn style_runs(styles: &[u8]) -> Vec<(usize, usize, u8)> {
+    let mut runs = Vec::new();
+    let mut start = 0;
+    while start < styles.len() {
+        let style = styles[start];
+        let end = start + styles[start..].iter().take_while(|s| **s == style).count();
+        if style != 0 {
+            runs.push((start, end, style));
+        }
+        start = end;
+    }
+    runs
 }
 
 /// HTML a texto plano (p. ej. el resumen de un libro): párrafos separados por una línea en blanco.
@@ -403,13 +492,16 @@ pub fn plain_text(html: &str) -> String {
     paragraphs.join("\n\n")
 }
 
-/// Valor de un atributo dentro de una etiqueta: attr(r#"p id="x""#, "id") -> Some("x")
+/// Valor de un atributo dentro de una etiqueta: attr(r#"p id="x""#, "id") -> Some("x").
+/// También sin comillas, como en algunos MOBI: attr("font size=4", "size") -> Some("4")
 fn attr<'a>(tag: &'a str, name: &str) -> Option<&'a str> {
     let pattern = format!("{name}=");
     let (i, _) = tag.match_indices(&pattern).find(|(i, _)| tag[..*i].ends_with(char::is_whitespace))?;
     let value = &tag[i + pattern.len()..];
-    let quote = value.chars().next().filter(|c| *c == '"' || *c == '\'')?;
-    value[1..].split(quote).next()
+    match value.chars().next()? {
+        quote @ ('"' | '\'') => value[1..].split(quote).next(),
+        _ => value.split(|c: char| c.is_whitespace() || c == '/').next(), // sin comillas: size=4
+    }
 }
 
 /// Convierte "&amp;", "&#233;", "&mdash;"... en sus caracteres.
