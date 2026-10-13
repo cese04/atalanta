@@ -70,6 +70,8 @@ fn epub_palabras_parrafos_titulo_y_autor() {
          "Capítulo", "2", "Texto", "dos.", "Sección", "2.1", "Texto", "final."]
     );
     assert_eq!(book.paragraphs, [0, 2, 8, 10, 12, 14, 16]);
+    assert_eq!(book.kinds, ["h1", "", "", "h1", "", "h2", ""]); // <h1>Capítulo…</h1>, <h2>Sección 2.1</h2>
+    assert!(book.scene_breaks.is_empty());
 }
 
 #[test]
@@ -105,6 +107,41 @@ fn indice_de_mobi_ignora_enlaces_sin_letras() {
 #[test]
 fn entidades_html() {
     assert_eq!(decode_entities("a&amp;b &lt;&#233;&#xE9;&mdash;&desconocida; & suelto"), "a&b <éé—&desconocida; & suelto");
+}
+
+#[test]
+fn formato_de_parrafos() {
+    let mut text = Text::default();
+    text.add_html("", include_str!("resources/formato.xhtml"));
+    let paragraphs: Vec<(&str, &str)> = text
+        .paragraphs
+        .iter()
+        .zip(&text.kinds)
+        .map(|(&start, &kind)| (text.words[start].as_str(), kind))
+        .collect();
+    assert_eq!(
+        paragraphs,
+        [
+            ("Título", "h1"),
+            ("Texto", ""),
+            ("Cita", "quote"),
+            ("Cita", "quote"), // los dos párrafos de la cita
+            ("Después", ""),   // la cita ya terminó
+            ("Nueva", ""),
+            ("Subtítulo", "h2"),
+            ("Menor", "h3"),   // <h5> cuenta como h3
+            ("Fin.", ""),
+        ]
+    );
+    assert_eq!(text.scene_breaks, [5]); // "Nueva escena." va después de un <hr/>
+}
+
+#[test]
+fn blockquote_como_sangria_no_es_cita() {
+    // 2 de 3 párrafos dentro de <blockquote>: es maquetación (sangría), no son citas.
+    let mut text = Text::default();
+    text.add_html("libro", "<blockquote><p>Uno.</p><p>Dos.</p></blockquote><p>Tres.</p>");
+    assert_eq!(text.into_book(String::new(), String::new(), vec![]).kinds, ["", "", ""]);
 }
 
 #[test]

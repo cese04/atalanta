@@ -220,7 +220,30 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   cursor: default;
 }
 #page p { margin: 0 0 0.8em; }
-#page p.chapter { margin-top: 2.5em; font-style: italic; }
+
+/* Formato del libro (ver paragraphClass en app.js): la estructura del libro con la
+   tipografía y los colores del tema. Títulos en cursiva y de tamaño según su nivel. */
+#page p.h1 { font-size: 1.6em; line-height: 1.3; font-style: italic; margin-bottom: 1em; }
+#page p.h2 { font-size: 1.35em; line-height: 1.3; font-style: italic; margin: 1.2em 0 0.8em; }
+#page p.h3 { font-size: 1.15em; font-style: italic; margin: 1em 0 0.6em; }
+#page p.quote { margin-left: 2em; margin-right: 2em; font-size: 0.95em; }
+
+/* Inicio de capítulo: una línea fina y espacio. */
+#page p.chapter { margin-top: 3em; padding-top: 2.5em; border-top: 1px solid var(--rule); }
+#page p.chapter:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+/* Separador de escena (<hr/> en el libro): una línea corta centrada antes del párrafo. */
+#page p.scene::before {
+  content: "";
+  display: block;
+  width: 4em;
+  margin: 1.8em auto;
+  border-top: 1px solid var(--rule);
+}
+#page p.chapter.scene::before { display: none; } /* el capítulo ya lleva su línea */
+
+/* Un párrafo que es solo un separador, como "* * *". */
+#page p.separator { margin: 1.5em 0; text-align: center; color: var(--muted); }
 #cur { color: var(--accent); }
 
 /* Copia de la palabra que vuela entre las dos vistas al pausar o reanudar. */

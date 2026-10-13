@@ -102,3 +102,15 @@ test("progreso del capítulo actual", () => {
   assert.equal(progress(7), 0.75);
   assert.equal(ui.run("chapterProgress(-1)"), 0); // sin capítulo
 });
+
+test("formato de cada párrafo en la vista de pausa", () => {
+  const ui = loadUI();
+  const book = bookFrom("Capítulo uno|Texto.|Una cita.|* * *|Otra escena.", {
+    toc: [{ title: "Capítulo uno", level: 0, word: 0 }],
+    kinds: ["h1", "", "quote", "", ""],
+    scene_breaks: [4],
+  });
+  ui.run(`book = ${JSON.stringify(book)}`);
+  const classes = ui.get("book.paragraphs.map((_, i) => paragraphClass(i, new Set(book.toc.map((c) => c.word)), new Set(book.scene_breaks)))");
+  assert.deepEqual(classes, ["h1 chapter", "", "quote", "separator", "scene"]);
+});

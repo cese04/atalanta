@@ -16,6 +16,8 @@ pub struct Book {
     pub description: String, // resumen del libro (de sus metadatos), en texto plano
     pub words: Vec<String>,
     pub paragraphs: Vec<usize>, // número de la primera palabra de cada párrafo
+    pub kinds: Vec<&'static str>, // tipo de cada párrafo: "h1", "h2", "h3" (títulos), "quote" (cita) o ""
+    pub scene_breaks: Vec<usize>, // párrafos precedidos por un separador <hr/>
     pub toc: Vec<Chapter>,
 }
 
@@ -242,6 +244,12 @@ struct Text {
     headings: Vec<Chapter>,          // <h1>-<h3>, por si el libro no trae índice
     glue: bool,                      // el siguiente texto continúa la última palabra
     new_paragraph: bool,             // la siguiente palabra empieza un párrafo
+    // Formato de los párrafos, para la vista de pausa:
+    kinds: Vec<&'static str>,        // tipo de cada párrafo (ver Book::kinds)
+    scene_breaks: Vec<usize>,        // párrafos precedidos por un <hr/>
+    heading_level: usize,            // dentro de <h1>-<h6> (0: fuera)
+    quote_depth: usize,              // dentro de cuántos <blockquote>
+    scene_break: bool,               // hubo un <hr/> antes del siguiente párrafo
 }
 
 impl Text {
@@ -250,6 +258,8 @@ impl Text {
     fn add_html(&mut self, file: &str, html: &str) {
         self.anchors.insert(file.to_string(), self.words.len());
         self.glue = false;
+        self.heading_level = 0;
+        self.quote_depth = 0;
         let mut skip = false; // dentro de <head>, <script> o <style>
         let mut heading: Option<(usize, usize, String)> = None; // (nivel, palabra, título)
         let mut rest = html;
@@ -279,8 +289,14 @@ impl Text {
                     h.2.push(' ');
                 }
             }
+            if let Some(level) = name.strip_prefix('h').and_then(|n| n.parse::<usize>().ok()).filter(|l| (1..=6).contains(l)) {
+                self.heading_level = if closing { 0 } else { level };
+            }
             match name.as_str() {
                 "head" | "script" | "style" => skip = !closing,
+                "blockquote" if !closing => self.quote_depth += 1,
+                "blockquote" => self.quote_depth = self.quote_depth.saturating_sub(1),
+                "hr" => self.scene_break = true,
                 "h1" | "h2" | "h3" if !closing => {
                     let level = name[1..].parse::<usize>().unwrap() - 1;
                     heading = Some((level, self.words.len(), String::new()));
@@ -319,6 +335,11 @@ impl Text {
                 _ => {
                     if self.new_paragraph || self.words.is_empty() {
                         self.paragraphs.push(self.words.len());
+                        self.kinds.push(self.kind());
+                        if self.scene_break {
+                            self.scene_breaks.push(self.paragraphs.len() - 1);
+                        }
+                        self.scene_break = false;
                         self.new_paragraph = false;
                     }
                     self.words.push(word.to_string());
@@ -326,6 +347,18 @@ impl Text {
             }
         }
         self.glue = !text.trim().is_empty() && !text.ends_with(char::is_whitespace);
+    }
+
+    /// Tipo del párrafo que empieza ahora: título (según su nivel; h4-h6 cuentan como h3),
+    /// cita o normal.
+    fn kind(&self) -> &'static str {
+        match self.heading_level {
+            1 => "h1",
+            2 => "h2",
+            3..=6 => "h3",
+            _ if self.quote_depth > 0 => "quote",
+            _ => "",
+        }
     }
 
     /// Convierte el índice (destinos tipo "archivo#id") en números de palabra.
@@ -342,7 +375,22 @@ impl Text {
         if toc.is_empty() {
             toc = self.headings;
         }
-        Book { title, author, description: String::new(), words: self.words, paragraphs: self.paragraphs, toc }
+        // Muchos MOBI usan <blockquote> como simple sangría de casi todo el texto. Si más del
+        // 30 % de los párrafos son "citas", es maquetación: se muestran como párrafos normales.
+        let mut kinds = self.kinds;
+        if kinds.iter().filter(|k| **k == "quote").count() * 10 > kinds.len() * 3 {
+            kinds.iter_mut().filter(|k| **k == "quote").for_each(|k| *k = "");
+        }
+        Book {
+            title,
+            author,
+            description: String::new(),
+            words: self.words,
+            paragraphs: self.paragraphs,
+            kinds,
+            scene_breaks: self.scene_breaks,
+            toc,
+        }
     }
 }
 

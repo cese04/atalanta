@@ -23,7 +23,7 @@ const { invoke } = window.__TAURI__.core;
 const { open } = window.__TAURI__.dialog;
 const $ = (id) => document.getElementById(id);
 
-let book = null;   // { title, author, words: [...], paragraphs: [...], toc: [{ title, level, word }] }
+let book = null;   // { title, author, description, words, paragraphs, kinds, scene_breaks, toc: [{ title, level, word }] }
 let path = null;   // ruta del libro abierto
 let pos = 0;       // número de la palabra actual
 let timer = null;  // distinto de null mientras se está leyendo
@@ -145,16 +145,28 @@ function formatMinutes(min) {
 // Un <p> por párrafo. Las palabras no llevan etiqueta propia (serían cientos de miles);
 // al hacer clic se calcula cuál es (ver wordAt).
 function renderPage() {
-  const starts = new Set(book.toc.map((ch) => ch.word));
+  const chapters = new Set(book.toc.map((ch) => ch.word));
+  const breaks = new Set(book.scene_breaks);
   const fragment = document.createDocumentFragment();
   book.paragraphs.forEach((start, i) => {
     const p = document.createElement("p");
     p.append(...paragraphNodes(i));
-    if (starts.has(start)) p.className = "chapter";
+    p.className = paragraphClass(i, chapters, breaks);
     fragment.append(p);
   });
   $("page").replaceChildren(fragment);
   marked = pos < book.words.length ? paragraphOf(pos) : -1;
+}
+
+// Formato de un párrafo en la vista de pausa (clases de CSS en style.css):
+//   h1 h2 h3 título · quote cita · chapter inicio de capítulo · scene tras un separador <hr/>
+//   separator un párrafo que es solo un separador, como "* * *"
+function paragraphClass(i, chapters, breaks) {
+  const classes = [book.kinds[i]];
+  if (chapters.has(book.paragraphs[i])) classes.push("chapter");
+  if (breaks.has(i)) classes.push("scene");
+  if (isSeparator(i)) classes.push("separator");
+  return classes.filter(Boolean).join(" ");
 }
 
 // Contenido de un párrafo: texto normal, subrayados (<span class="hl" data-color="…">,
@@ -477,7 +489,7 @@ function setPaused(paused) {
 async function switchView(paused, from, to) {
   busy = true;
   setPaused(paused);
-  const sizes = [fontSize($("word")), fontSize($("page"))];
+  const sizes = [fontSize($("word")), fontSize($("cur"))]; // la palabra en el texto puede estar en un título
   const [fromSize, toSize] = paused ? sizes : sizes.reverse();
   if (onStage(from) && onStage(to)) {
     $("word").style.visibility = $("cur").style.visibility = "hidden";
