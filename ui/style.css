@@ -6,6 +6,12 @@
 [data-theme="tufte"] {
   --bg: #fffff8; --fg: #111111; --muted: #777770; --rule: #d9d9cf; --bar: #c4c4b8; --accent: #a00000;
 }
+/* Modo oscuro de tufte-css, con un rojo más claro para que el acento contraste. */
+[data-theme="tufte-dark"] {
+  --mark-alpha: 30%;
+  --bg: #151515; --fg: #dddddd; --muted: #8f8f88; --rule: #333333; --bar: #3d3d3a; --accent: #e06c6c;
+  color-scheme: dark;
+}
 [data-theme="solarized-light"] {
   --bg: #fdf6e3; --fg: #586e75; --muted: #93a1a1; --rule: #eee8d5; --bar: #d6cfb8; --accent: #dc322f;
 }
@@ -38,6 +44,18 @@
 [data-theme="dracula"] {
   --mark-alpha: 30%;
   --bg: #282a36; --fg: #f8f8f2; --muted: #6272a4; --rule: #44475a; --bar: #4f5370; --accent: #ff79c6;
+  color-scheme: dark;
+}
+
+/* Typewriter (tema de Obsidian de crashmoney/obsidian-typewriter): papel crema y tinta, acento verde.
+   En el claro, el verde es un poco más oscuro que el original (#519d5c) para leerse bien en texto
+   pequeño, como el capítulo actual del índice (contraste 4.8:1 en vez de 3.1:1). */
+[data-theme="typewriter-light"] {
+  --bg: #fcf5e4; --fg: #262626; --muted: #595959; --rule: #e6e6e6; --bar: #e4dcc8; --accent: #3f7947;
+}
+[data-theme="typewriter-dark"] {
+  --mark-alpha: 30%;
+  --bg: #262626; --fg: #c5b8a1; --muted: #999999; --rule: #333333; --bar: #3a342e; --accent: #519d5c;
   color-scheme: dark;
 }
 

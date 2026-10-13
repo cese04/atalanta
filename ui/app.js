@@ -548,7 +548,8 @@ const fontSize = (el) => parseFloat(getComputedStyle(el).fontSize);
 // ── Ajustes (se cambian desde el menú Ver) ──
 
 const THEMES = [
-  ["tufte", "Tufte"],
+  ["tufte", "Tufte claro"],
+  ["tufte-dark", "Tufte oscuro"],
   ["solarized-light", "Solarized claro"],
   ["solarized-dark", "Solarized oscuro"],
   ["latte", "Catppuccin Latte"],
@@ -557,6 +558,8 @@ const THEMES = [
   ["nord-light", "Nord claro"],
   ["nord", "Nord oscuro"],
   ["dracula", "Dracula"],
+  ["typewriter-light", "Typewriter claro"],
+  ["typewriter-dark", "Typewriter oscuro"],
 ];
 
 // Ajustes de sí/no: nombre en el menú, valor por defecto, atajo y qué hacer al cambiarlos.
