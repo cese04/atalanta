@@ -241,8 +241,11 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   align-items: center;
   gap: 0.875rem;
   padding: 1rem 1.5rem 1.25rem;
-  border-top: 1px solid var(--rule);
 }
+
+/* Progreso del capítulo: separa el texto de los controles. La parte leída, en el color de acento. */
+#chapterBar { height: 0.1875rem; background: var(--rule); }
+#chapterFill { width: 0; height: 100%; background: var(--accent); }
 #controls { display: flex; align-items: center; gap: 0.875rem; font-size: 0.875rem; }
 #play { min-width: 4em; color: var(--fg); }
 #wpmLabel { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5em; }

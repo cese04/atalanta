@@ -90,3 +90,15 @@ test("tamaño de letra: pasos fijos, con tope y vuelta al normal", () => {
   assert.equal(ui.run("nextFontScale(80, -1)"), 80);   // tope abajo
   assert.equal(ui.run("nextFontScale(150, 0)"), 100);  // ⌘0: normal
 });
+
+test("progreso del capítulo actual", () => {
+  const ui = loadUI();
+  const toc = [{ title: "Uno", level: 0, word: 0 }, { title: "Dos", level: 0, word: 4 }];
+  ui.run(`book = ${JSON.stringify(bookFrom("a b c d e f g h", { toc }))}; lengths = chapterLengths()`);
+  const progress = (p) => ui.run(`pos = ${p}; chapterProgress(chapterAt(${p}))`);
+  assert.equal(progress(0), 0);    // inicio del capítulo "Uno"
+  assert.equal(progress(2), 0.5);  // a la mitad
+  assert.equal(progress(4), 0);    // empieza "Dos": vuelve a cero
+  assert.equal(progress(7), 0.75);
+  assert.equal(ui.run("chapterProgress(-1)"), 0); // sin capítulo
+});

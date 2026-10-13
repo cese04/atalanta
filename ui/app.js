@@ -317,10 +317,17 @@ function show() {
   const chapterLeft = c < 0 ? 0 : book.toc[c].word + lengths[c] - pos;
   $("chapterStatus").textContent =
     c < 0 ? "" : `Capítulo ${percent(pos - book.toc[c].word, lengths[c])} · quedan ${formatMinutes(chapterLeft / wpm)}`;
+  $("chapterFill").style.width = 100 * chapterProgress(c) + "%";
 
   highlightChapter(c);
   fillBars();
   localStorage.setItem("pos:" + path, pos);
+}
+
+// Parte leída (0 a 1) del capítulo número `c` de book.toc; 0 si no hay capítulo.
+function chapterProgress(c) {
+  if (c < 0) return 0;
+  return Math.min(1, Math.max(0, (pos - book.toc[c].word) / Math.max(1, lengths[c])));
 }
 
 // 45 de 100 -> "45 %"
