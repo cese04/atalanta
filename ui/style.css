@@ -27,6 +27,9 @@
   --bg: #282828; --fg: #ebdbb2; --muted: #928374; --rule: #3c3836; --bar: #504945; --accent: #fb4934;
   color-scheme: dark;
 }
+[data-theme="nord-light"] {
+  --bg: #eceff4; --fg: #2e3440; --muted: #4c566a; --rule: #d8dee9; --bar: #c5ccd8; --accent: #5e81ac;
+}
 [data-theme="nord"] {
   --mark-alpha: 30%;
   --bg: #2e3440; --fg: #d8dee9; --muted: #7b88a1; --rule: #3b4252; --bar: #4c566a; --accent: #88c0d0;

@@ -500,7 +500,8 @@ const THEMES = [
   ["latte", "Catppuccin Latte"],
   ["mocha", "Catppuccin Mocha"],
   ["gruvbox", "Gruvbox"],
-  ["nord", "Nord"],
+  ["nord-light", "Nord claro"],
+  ["nord", "Nord oscuro"],
   ["dracula", "Dracula"],
 ];
 
