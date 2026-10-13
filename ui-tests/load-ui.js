@@ -48,7 +48,7 @@ function loadUI() {
   };
   context.window = context;
   vm.createContext(context);
-  for (const file of ["rhythm.js", "app.js", "notes.js", "import.js", "menu.js"]) {
+  for (const file of ["rhythm.js", "app.js", "pdf-reader.js", "notes.js", "import.js", "menu.js"]) {
     const code = fs.readFileSync(path.join(__dirname, "..", "ui", file), "utf8");
     vm.runInContext(code, context, { filename: file });
   }

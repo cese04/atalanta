@@ -1,6 +1,6 @@
 # FastRead
 
-Lector veloz (palabra por palabra) para libros `.epub` y `.mobi`, hecho con Rust + Tauri.
+Lector veloz (palabra por palabra) para libros `.epub`, `.mobi` y `.pdf`, hecho con Rust + Tauri.
 Al pausar muestra el texto completo, donde puedes elegir desde dónde seguir y subrayar
 fragmentos que se guardan como notas Markdown para Obsidian.
 
@@ -22,6 +22,15 @@ fragmentos que se guardan como notas Markdown para Obsidian.
 | `Esc` | Salir del modo subrayado / cerrar la ayuda |
 | ⌥⌘S | Mostrar u ocultar el índice |
 | ⌘+ ⌘− ⌘0 | Letra más grande / más pequeña / normal (toda la interfaz escala junta) |
+
+## PDF
+
+Los PDF se leen con pdf.js, dentro de la interfaz (igual en macOS, Windows y Linux). Un PDF
+solo dice qué texto va en qué posición, así que FastRead reconstruye el libro: une renglones
+en párrafos, une palabras partidas con guion, quita encabezados, números de página y notas al
+pie, detecta títulos por su tamaño de letra y toma el índice de los marcadores del PDF.
+Funciona bien con prosa; las fórmulas matemáticas no se pueden leer palabra por palabra.
+Los PDF escaneados (sin texto) aún no se leen.
 
 ## Subrayados y notas
 
@@ -101,6 +110,7 @@ Cada parte tiene su carpeta de pruebas:
 | `ui/index.html` | Estructura de la ventana, ayuda de atajos y editor de subrayados |
 | `ui/style.css` | Temas de color, tamaños, tipografía |
 | `ui/app.js` | Lectura, vistas (lector y texto completo), índice, ajustes y teclado |
+| `ui/pdf-reader.js` | Abre PDF con pdf.js (`ui/vendor/pdfjs`) y reconstruye párrafos, títulos e índice |
 | `ui/rhythm.js` | Cuánto dura cada palabra (pausas, ritmo natural) y qué es diálogo |
 | `ui/notes.js` | Subrayados: modo subrayado, editor y archivos para Obsidian |
 | `ui/import.js` | Importar subrayados de Kindle (My Clippings.txt) y Kobo |
@@ -108,7 +118,7 @@ Cada parte tiene su carpeta de pruebas:
 | `src-tauri/src/book.rs` | Lee EPUB/MOBI: palabras, párrafos, índice, título y autor |
 | `src-tauri/src/kobo.rs` | Lee los subrayados de la base de datos de un Kobo |
 | `src-tauri/src/chapters.rs` | Busca en qué capítulo de un libro está cada cita (para Kindle) |
-| `src-tauri/src/main.rs` | Arranca la app; comandos `open_book`, `kobo_highlights`, `find_chapters`, `read_text`, `write_text` |
+| `src-tauri/src/main.rs` | Arranca la app; comandos `open_book`, `kobo_highlights`, `find_chapters`, `read_bytes`, `read_text`, `write_text` |
 
 Cambios fáciles:
 
@@ -123,6 +133,7 @@ Cambios fáciles:
   - **Atkinson Hyperlegible** (Braille Institute): SIL Open Font License 1.1.
   - **iA Writer Quattro** (Information Architects, basada en IBM Plex): SIL Open Font License 1.1.
 - Iowan Old Style, New York, Charter y San Francisco son fuentes del sistema macOS.
+- **pdf.js** (Mozilla), en `ui/vendor/pdfjs`: licencia Apache 2.0.
 - Temas de color basados en Tufte CSS, Solarized, Catppuccin, Gruvbox, Nord, Dracula y
   obsidian-typewriter.
 

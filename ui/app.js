@@ -3,6 +3,7 @@
 //
 // Archivos de la interfaz:
 //   app.js     lectura, vistas, índice, ajustes y teclado (este archivo)
+//   pdf-reader.js  abrir PDF (con pdf.js) y convertirlos en la misma estructura que los EPUB
 //   rhythm.js  cuánto dura cada palabra y qué es diálogo
 //   notes.js   subrayados y notas para Obsidian
 //   menu.js    menú principal y libros recientes
@@ -42,7 +43,7 @@ let lengths = [];  // palabras de cada capítulo (mismo orden que book.toc)
 // ── Abrir libro ──
 
 async function chooseBook() {
-  const p = await open({ filters: [{ name: "Libros", extensions: ["epub", "mobi"] }] });
+  const p = await open({ filters: [{ name: "Libros", extensions: ["epub", "mobi", "pdf"] }] });
   if (p) openBook(p);
 }
 
@@ -52,7 +53,9 @@ async function openBook(p) {
   setHighlighting(false);
   $("msg").textContent = "Cargando…";
   try {
-    book = await invoke("open_book", { path: p });
+    book = p.toLowerCase().endsWith(".pdf")
+      ? await openPdf(p, (n, total) => ($("msg").textContent = `Leyendo el PDF… página ${n} de ${total}`)) // ver pdf-reader.js
+      : await invoke("open_book", { path: p });
   } catch (e) {
     $("msg").textContent = "No se pudo abrir el libro: " + e;
     setPaused(false); // muestra el mensaje

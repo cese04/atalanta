@@ -1,0 +1,32 @@
+{
+  "descripcion": "Renglones de un PDF de 3 páginas, como los da pdfLines (y crece hacia arriba). Texto a 10 pt, margen izquierdo en x=72. Incluye: encabezado repetido ('Mi libro'), números de página, una nota al pie (8 pt), una palabra partida con guion, sangrías, títulos (16 pt) y un párrafo que sigue en la página siguiente.",
+  "paginas": [
+    [
+      { "text": "Mi libro", "x": 72, "y": 760, "size": 9, "right": 150 },
+      { "text": "Capítulo uno", "x": 72, "y": 700, "size": 16, "right": 300 },
+      { "text": "Era una vez un li-", "x": 90, "y": 670, "size": 10, "right": 540 },
+      { "text": "bro muy largo que seguía.", "x": 72, "y": 658, "size": 10, "right": 300 },
+      { "text": "Otro párrafo que", "x": 72, "y": 646, "size": 10, "right": 540 },
+      { "text": "continúa en la página siguiente", "x": 72, "y": 634, "size": 10, "right": 540 },
+      { "text": "1 Una nota al pie.", "x": 72, "y": 100, "size": 8, "right": 200 },
+      { "text": "1", "x": 300, "y": 60, "size": 9, "right": 310 }
+    ],
+    [
+      { "text": "Mi libro", "x": 72, "y": 760, "size": 9, "right": 150 },
+      { "text": "y aquí termina.", "x": 72, "y": 700, "size": 10, "right": 200 },
+      { "text": "Un párrafo tras un espacio y largo", "x": 72, "y": 670, "size": 10, "right": 540 },
+      { "text": "que ocupa dos renglones completos", "x": 72, "y": 658, "size": 10, "right": 540 },
+      { "text": "2", "x": 300, "y": 60, "size": 9, "right": 310 }
+    ],
+    [
+      { "text": "Mi libro", "x": 72, "y": 760, "size": 9, "right": 150 },
+      { "text": "Capítulo dos", "x": 72, "y": 700, "size": 16, "right": 300 },
+      { "text": "Fin del libro.", "x": 90, "y": 670, "size": 10, "right": 200 },
+      { "text": "3", "x": 300, "y": 60, "size": 9, "right": 310 }
+    ]
+  ],
+  "marcadores": [
+    { "title": "Uno", "level": 0, "page": 0 },
+    { "title": "Dos", "level": 0, "page": 2 }
+  ]
+}

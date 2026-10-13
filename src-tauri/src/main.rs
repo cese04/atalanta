@@ -23,6 +23,12 @@ async fn find_chapters(title: String, quotes: Vec<String>, dirs: Vec<String>) ->
     chapters::find(&title, &quotes, &dirs)
 }
 
+/// Lee un archivo binario: un PDF, que se procesa en la interfaz con pdf.js (ver ui/pdf-reader.js).
+#[tauri::command]
+async fn read_bytes(path: String) -> Result<tauri::ipc::Response, String> {
+    std::fs::read(path).map(tauri::ipc::Response::new).map_err(|e| e.to_string())
+}
+
 /// Lee un archivo de texto (las notas). Si no existe, devuelve "".
 #[tauri::command]
 fn read_text(path: String) -> String {
@@ -42,7 +48,7 @@ fn write_text(path: String, content: String) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![open_book, kobo_highlights, find_chapters, read_text, write_text])
+        .invoke_handler(tauri::generate_handler![open_book, kobo_highlights, find_chapters, read_bytes, read_text, write_text])
         .run(tauri::generate_context!())
         .expect("error al iniciar FastRead");
 }
