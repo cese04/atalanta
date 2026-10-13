@@ -17,6 +17,7 @@
 //   "recent"      -> libros recientes
 //   "last"        -> ruta del último libro abierto
 //   "pos:<ruta>"  -> palabra donde te quedaste en ese libro
+//   "started:<ruta>" -> fecha en que se abrió por primera vez (propiedad `started` de la nota)
 
 const { invoke } = window.__TAURI__.core;
 const { open } = window.__TAURI__.dialog;
@@ -45,6 +46,7 @@ async function chooseBook() {
 
 async function openBook(p) {
   stopTimer();
+  await saveReading(); // progreso del libro que se deja, si se estaba leyendo
   setHighlighting(false);
   $("msg").textContent = "Cargando…";
   try {
@@ -76,6 +78,7 @@ async function openBook(p) {
   pausedAt = 0; // al abrir un libro cuenta como una pausa larga: se retoma desde el inicio de la frase
   chosen = false;
   addRecent();
+  saveReading(); // crea la nota del libro (si no existe) con su fecha de inicio
 }
 
 // ── Índice ──
@@ -374,6 +377,7 @@ function pause() {
   scrollToWord(true);
   switchView(true, from, $("cur").getBoundingClientRect());
   buildMenu(); // actualiza el % leído en "Abrir reciente"
+  saveReading(); // progreso y velocidad en la nota del libro
 }
 
 function stopTimer() {

@@ -120,3 +120,49 @@ test("color de marcatextos: amarillo si falta o no es válido", () => {
   assert.equal(ui.run("markColor({})"), "amarillo");          // subrayados de antes, sin color
   assert.equal(ui.run('markColor({ color: "morado" })'), "amarillo");
 });
+
+test("propiedades: se reemplazan o añaden sin tocar las demás", () => {
+  const ui = loadUI();
+  const md = '---\ntitle: "Demian"\nrating: 5\nprogress: 10\nstarted: 2026-01-02\n---\n\nMis ideas\n';
+  const result = ui.run(`updateProperties(${JSON.stringify(md)}, { progress: 40, wpm: 350 }, { started: "2026-10-12", finished: "2026-10-12" })`);
+  assert.equal(
+    result,
+    '---\ntitle: "Demian"\nrating: 5\nprogress: 40\nstarted: 2026-01-02\nwpm: 350\nfinished: 2026-10-12\n---\n\nMis ideas\n'
+  ); // "rating" (tuya) se conserva; "started" ya existía y no cambia
+});
+
+test("propiedades: una nota sin bloque de propiedades recibe uno arriba", () => {
+  const ui = loadUI();
+  assert.equal(ui.run('updateProperties("Mis ideas\\n", { progress: 5 })'), "---\nprogress: 5\n---\n\nMis ideas\n");
+});
+
+test("propiedades de lectura: nota nueva al empezar, progreso al pausar y fin al terminar", async () => {
+  const ui = loadUI();
+  ui.run(`notesDir = "/Vault"; path = "/Libros/Demian.epub"; wpm = 300`);
+  ui.run(`book = ${JSON.stringify(bookFrom("Uno dos tres cuatro cinco", { title: "Demian", author: "Hermann Hesse" }))}`);
+  const today = ui.run("today()");
+
+  ui.run("pos = 0");
+  await ui.run("saveReading()"); // al abrir el libro
+  let md = ui.files["/Vault/Demian.md"];
+  assert.ok(md.startsWith('---\ntitle: "Demian"\nauthor: "Hermann Hesse"\nsource: "Demian.epub"\ntags: [libro]\n'));
+  assert.ok(md.includes(`progress: 0\nwpm: 300\nstarted: ${today}\n---`));
+  assert.ok(!md.includes("finished"));
+
+  ui.run("pos = 2; wpm = 400");
+  await ui.run("saveReading()"); // en una pausa
+  md = ui.files["/Vault/Demian.md"];
+  assert.ok(md.includes("progress: 50\nwpm: 400\n"));
+  assert.equal(md.split("started:").length, 2, "started no se duplica");
+
+  ui.run("pos = 4");
+  await ui.run("saveReading()"); // al llegar al final
+  assert.ok(ui.files["/Vault/Demian.md"].includes(`progress: 100\nwpm: 400\nstarted: ${today}\nfinished: ${today}\n`));
+});
+
+test("propiedades de lectura: sin carpeta de notas no se escribe nada", async () => {
+  const ui = loadUI();
+  ui.run(`notesDir = ""; book = ${JSON.stringify(bookFrom("Uno dos"))}`);
+  await ui.run("saveReading()");
+  assert.deepEqual(Object.keys(ui.files), []);
+});

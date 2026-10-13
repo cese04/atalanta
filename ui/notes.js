@@ -127,6 +127,57 @@ function clipsMarkdown(source, clips) {
   return out.join("\n");
 }
 
+// ── Propiedades de lectura ──
+// Cada libro que lees tiene su nota, con estas propiedades (Obsidian las muestra arriba y
+// las Bases o Dataview pueden listarlas en una tabla):
+//   progress  % leído (0-100)        wpm       velocidad (palabras por minuto)
+//   started   fecha en que empezaste  finished  fecha en que llegaste al final
+// progress y wpm se actualizan en cada pausa; started y finished se escriben una sola vez.
+
+async function saveReading() {
+  if (!book || !notesDir) return;
+  const file = `${notesDir}/${notesName()}.md`;
+  try {
+    const old = await invoke("read_text", { path: file });
+    const progress = Math.round((100 * pos) / Math.max(1, book.words.length - 1));
+    const keep = { started: startedOn() };
+    if (progress === 100) keep.finished = today();
+    const info = { title: book.title, author: book.author, source: path.split(/[\\/]/).pop() };
+    const md = updateProperties(old || frontmatter(info), { progress, wpm }, keep);
+    if (md !== old) await invoke("write_text", { path: file, content: md });
+  } catch (e) {
+    notify("No se pudo actualizar la nota: " + e);
+  }
+}
+
+// Fecha en que se empezó el libro: la primera vez que se abrió (se recuerda por ruta).
+function startedOn() {
+  const key = "started:" + path;
+  if (!localStorage.getItem(key)) localStorage.setItem(key, today());
+  return localStorage.getItem(key);
+}
+
+const today = () => new Date().toLocaleDateString("sv-SE"); // "2026-10-12", en hora local
+
+// Escribe propiedades en el bloque --- … --- del principio de una nota (lo crea si no hay)
+// sin tocar las demás. Las de `set` se reemplazan o añaden; las de `keep`, solo se añaden
+// si aún no existen (p. ej. la fecha de inicio).
+function updateProperties(md, set, keep = {}) {
+  const block = md.match(/^---\n([\s\S]*?)\n?---\n/);
+  const lines = block ? block[1].split("\n").filter((l) => l !== "") : [];
+  const rest = block ? md.slice(block[0].length) : "\n" + md;
+  const has = (key) => lines.findIndex((l) => l.startsWith(key + ":"));
+  for (const [key, value] of Object.entries(set)) {
+    const i = has(key);
+    if (i >= 0) lines[i] = `${key}: ${value}`;
+    else lines.push(`${key}: ${value}`);
+  }
+  for (const [key, value] of Object.entries(keep)) {
+    if (has(key) < 0) lines.push(`${key}: ${value}`);
+  }
+  return `---\n${lines.join("\n")}\n---\n${rest}`;
+}
+
 // ── Modo subrayado ──
 
 function setHighlighting(on) {

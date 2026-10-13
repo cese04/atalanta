@@ -39,6 +39,16 @@ Por cada libro se escriben dos archivos en la carpeta de notas:
   entre sus marcas (`<!-- fastread:… -->`): lo que escribas fuera se conserva.
 - `.fastread/Título.json`: los subrayados de FastRead, editables (Obsidian no muestra carpetas que empiezan con punto).
 
+Cada libro que abres tiene su nota, aunque no tenga subrayados, con propiedades de lectura que
+Obsidian (Bases o Dataview) puede reunir en una tabla. Las que añadas tú se conservan.
+
+| Propiedad | Valor | Cuándo cambia |
+|---|---|---|
+| `progress` | % leído (0–100) | en cada pausa y al cambiar de libro |
+| `wpm` | velocidad (palabras por minuto) | en cada pausa |
+| `started` | fecha en que abriste el libro por primera vez | una sola vez |
+| `finished` | fecha en que llegaste al final | una sola vez |
+
 ## Importar de Kindle y Kobo
 
 Conecta el lector por USB y elige **Archivo › Importar subrayados de Kindle…** o **…de Kobo…**.
