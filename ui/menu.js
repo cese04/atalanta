@@ -72,6 +72,11 @@ async function createMenu() {
         check(t.label, isOn(key), () => setToggle(key, !isOn(key)), t.accelerator)),
       separator,
       { text: "Tema", items: THEMES.map(([id, name]) => check(name, id === theme, () => setTheme(id))) },
+      { text: `Tamaño de letra (${fontScale()} %)`, items: [
+        { text: "Más grande", accelerator: "CmdOrCtrl+=", action: () => changeFontSize(1) },
+        { text: "Más pequeña", accelerator: "CmdOrCtrl+-", action: () => changeFontSize(-1) },
+        { text: "Tamaño normal", accelerator: "CmdOrCtrl+0", action: () => changeFontSize(0) },
+      ]},
       separator,
       { item: "Fullscreen", text: "Pantalla completa" },
     ]},

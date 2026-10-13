@@ -21,6 +21,7 @@ fragmentos que se guardan como notas Markdown para Obsidian.
 | `S` | En pausa: modo subrayado, o subrayar el texto seleccionado |
 | `Esc` | Salir del modo subrayado / cerrar la ayuda |
 | ⌥⌘S | Mostrar u ocultar el índice |
+| ⌘+ ⌘− ⌘0 | Letra más grande / más pequeña / normal (toda la interfaz escala junta) |
 
 ## Subrayados y notas
 

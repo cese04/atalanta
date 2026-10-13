@@ -78,3 +78,15 @@ test("al reanudar: no retrocede más de REWIND_MAX_WORDS en frases muy largas", 
   ui.run(`book = ${JSON.stringify(bookFrom(longSentence))}`);
   assert.equal(ui.run("resumeFrom(80, 10000, false)"), 80 - ui.run("REWIND_MAX_WORDS"));
 });
+
+test("tamaño de letra: pasos fijos, con tope y vuelta al normal", () => {
+  const ui = loadUI();
+  assert.equal(ui.run("fontScale()"), 100);            // sin elegir: normal
+  ui.storage.set("fontScale", "137");
+  assert.equal(ui.run("fontScale()"), 100);            // valor que no está en la lista: normal
+  assert.equal(ui.run("nextFontScale(100, 1)"), 110);
+  assert.equal(ui.run("nextFontScale(100, -1)"), 90);
+  assert.equal(ui.run("nextFontScale(175, 1)"), 175);  // tope arriba
+  assert.equal(ui.run("nextFontScale(80, -1)"), 80);   // tope abajo
+  assert.equal(ui.run("nextFontScale(150, 0)"), 100);  // ⌘0: normal
+});

@@ -10,6 +10,7 @@
 // Lo guardado entre sesiones vive en localStorage:
 //   "wpm"         -> velocidad (palabras por minuto)
 //   "theme"       -> tema de colores
+//   "fontScale"   -> tamaño de letra, en % del normal
 //   "sidebar", "chart", "context", "natural" -> "1" / "" (ver `toggles`)
 //   "notesDir"    -> carpeta de notas
 //   "markColor"   -> último color de marcatextos usado
@@ -542,6 +543,30 @@ function setToggle(key, on) {
   buildMenu();
 }
 
+// Tamaño de letra, en % del tamaño base (16px). Como todo el CSS usa rem, la interfaz
+// entera escala junta: índice, palabra, texto de la pausa y controles.
+const FONT_SCALES = [80, 90, 100, 110, 120, 135, 150, 175];
+
+function fontScale() {
+  const saved = Number(localStorage.getItem("fontScale"));
+  return FONT_SCALES.includes(saved) ? saved : 100;
+}
+
+// El siguiente tamaño de la lista: más grande (1), más pequeño (-1) o el normal (0).
+function nextFontScale(current, direction) {
+  if (direction === 0) return 100;
+  const i = FONT_SCALES.indexOf(current);
+  return FONT_SCALES[Math.max(0, Math.min(FONT_SCALES.length - 1, i + direction))];
+}
+
+function changeFontSize(direction) {
+  const scale = nextFontScale(fontScale(), direction);
+  localStorage.setItem("fontScale", scale);
+  document.documentElement.style.fontSize = scale + "%";
+  if (book && !timer && !busy) scrollToWord(false); // que la palabra actual siga a la vista
+  buildMenu();
+}
+
 function setTheme(name) {
   document.documentElement.dataset.theme = name;
   localStorage.setItem("theme", name);
@@ -583,8 +608,18 @@ $("helpButton").onclick = () => toggleHelp();
 $("help").onclick = () => toggleHelp(false);
 
 document.addEventListener("keydown", (e) => {
-  // Mientras se escribe una nota, o con ⌘/Ctrl (atajos del menú), el teclado no controla la lectura.
-  if ($("noteDialog").open || e.target.matches("textarea, input[type=text]") || e.metaKey || e.ctrlKey) return;
+  // Mientras se escribe una nota, el teclado no controla la lectura.
+  if ($("noteDialog").open || e.target.matches("textarea, input[type=text]")) return;
+  // ⌘+ ⌘− ⌘0: tamaño de letra. Están en el menú, pero aquí se reconocen por el carácter
+  // (en un teclado en español "+" tiene tecla propia y "=" no coincide). Los demás ⌘ son del menú.
+  if (e.metaKey || e.ctrlKey) {
+    const size = { "+": 1, "=": 1, "-": -1, "0": 0 }[e.key];
+    if (size !== undefined) {
+      changeFontSize(size);
+      e.preventDefault();
+    }
+    return;
+  }
   if (e.key === "?") toggleHelp();
   else if (e.key === "Escape") {
     toggleHelp(false);
@@ -607,6 +642,7 @@ document.addEventListener("keydown", (e) => {
 
 window.addEventListener("DOMContentLoaded", () => {
   document.documentElement.dataset.theme = localStorage.getItem("theme") || "tufte";
+  document.documentElement.style.fontSize = fontScale() + "%";
   for (const key in toggles) toggles[key].apply(isOn(key));
   setWpm(wpm);
   buildMenu();
