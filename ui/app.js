@@ -35,7 +35,6 @@ let rampLeft = 0;  // palabras que faltan del arranque gradual
 let pausedAt = 0;  // cuándo se pausó (0: no en esta sesión, p. ej. al abrir un libro)
 let chosen = false; // si en la pausa se eligió otra palabra (clic, flechas, índice…)
 let natural = true; // "Ritmo natural" (ver rhythm.js)
-let speech = new Uint8Array(0); // 1 = la palabra es diálogo (ver findSpeech en rhythm.js)
 let wordStyles = new Uint8Array(0); // estilo de cada palabra del libro en la vista de pausa (cursiva, negrita…)
 let wpm = Number(localStorage.getItem("wpm")) || 300;
 let lengths = [];  // palabras de cada capítulo (mismo orden que book.toc)
@@ -74,7 +73,7 @@ async function openBook(p) {
     const other = chapterStarts.get(ch.word);
     if (!other || ch.level < other.level) chapterStarts.set(ch.word, ch); // gana el de nivel más alto
   }
-  speech = findSpeech();
+  separators = new Set(book.rhythm.separators); // ver rhythm.js
   wordStyles = expandStyles(book.styles, book.words.length);
   await loadHighlights();
   renderToc();
@@ -399,7 +398,7 @@ function show() {
   $("right").textContent = letters.slice(a + 1).join("");
   $("prev").textContent = book.words[pos - 1] || "";
   $("next").textContent = book.words[pos + 1] || "";
-  $("word").classList.toggle("speech", natural && speech[pos] === 1); // diálogo en cursiva
+  $("word").classList.toggle("speech", natural && isSpeech(pos)); // diálogo en cursiva
   const mark = highlights.find((h) => pos >= h.start && pos <= h.end); // palabra subrayada: con su color
   if (mark) $("word").setAttribute("data-color", markColor(mark));
   else $("word").removeAttribute("data-color");

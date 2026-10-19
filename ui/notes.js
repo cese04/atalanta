@@ -6,6 +6,8 @@
 //                                       escribas fuera de ellas se conserva.
 //   <carpeta>/.fastread/<Título>.json   los subrayados de FastRead, que se pueden editar
 //                                       (Obsidian no muestra carpetas que empiezan con punto).
+// El Markdown de la nota (secciones, propiedades, resumen) lo escribe Rust (core/src/notes.rs);
+// aquí quedan el modo subrayado, el editor y los datos de los subrayados de FastRead.
 // Usa `book`, `path`, `pos`, `invoke`, `open` y funciones de app.js. Kindle y Kobo: import.js.
 
 let highlights = []; // [{ id, start, end, text, note, color, chapter, created }], ordenados por `start`
@@ -34,12 +36,11 @@ async function chooseNotesDir() {
   return true;
 }
 
-// Nombre de archivo a partir de un título, sin caracteres que den problemas en Obsidian.
-function fileName(title) {
-  return title.replace(/[\/\\:*?"<>|#^\[\]]/g, "").replace(/\s+/g, " ").trim().slice(0, 120) || "Libro";
-}
+// Nombre de la nota del libro (sin ".md"); lo calcula Rust (notes::file_name en core/src/notes.rs).
+const notesName = () => book.note_name;
 
-const notesName = () => fileName(book.title);
+// Datos del libro para crear su nota (título, autor y archivo de origen).
+const bookInfo = () => ({ title: book.title, author: book.author, source: path.split(/[\\/]/).pop() });
 
 async function loadHighlights() {
   highlights = [];
@@ -52,6 +53,8 @@ async function loadHighlights() {
   }
 }
 
+// Guarda los subrayados: sus datos en .fastread/<Título>.json (para poder editarlos) y la
+// sección "## FastRead" y el resumen en la nota (eso lo escribe Rust: core/src/notes.rs).
 async function saveHighlights() {
   const data = { title: book.title, author: book.author, source: path, highlights };
   try {
@@ -59,73 +62,12 @@ async function saveHighlights() {
       path: `${notesDir}/.fastread/${notesName()}.json`,
       content: JSON.stringify(data, null, 2),
     });
-    const info = { title: book.title, author: book.author, source: path.split(/[\\/]/).pop() };
-    await writeSection(info, "FastRead", clipsMarkdown("FastRead", highlights));
-    await writeSummary(info, book.description);
+    await invoke("notes_section", { dir: notesDir, info: bookInfo(), source: "FastRead", clips: highlights });
+    await invoke("notes_summary", { dir: notesDir, info: bookInfo(), text: book.description });
     notify(`Guardado en ${notesName()}.md`);
   } catch (e) {
     notify("No se pudieron guardar las notas: " + e);
   }
-}
-
-// Marcas que delimitan la sección de un origen ("FastRead", "Kindle", "Kobo") en el .md.
-function sectionMarks(source) {
-  const id = source === "FastRead" ? "fastread" : "fastread:" + source.toLowerCase();
-  return [`<!-- ${id}:inicio · FastRead reescribe esta sección; escribe tus notas fuera de ella -->`, `<!-- ${id}:fin -->`];
-}
-
-// Escribe (o reemplaza) la sección `source` en el .md del libro y conserva todo lo demás.
-// `info` = { title, author, source }: se usa para el nombre y las propiedades de un archivo nuevo.
-// Una sección nueva va al final, o arriba (justo después de las propiedades) si `top` es true.
-async function writeSection(info, source, body, top = false) {
-  const file = `${notesDir}/${fileName(info.title)}.md`;
-  const old = await invoke("read_text", { path: file });
-  const [start, end] = sectionMarks(source);
-  const section = `${start}\n${body}\n\n${end}`;
-  const a = old.indexOf(start.slice(0, start.indexOf(" ·"))); // basta con el inicio de la marca
-  const b = old.indexOf(end);
-  let md;
-  if (a >= 0 && b > a) md = old.slice(0, a) + section + old.slice(b + end.length); // ya existía: se reemplaza
-  else if (!old) md = frontmatter(info) + section + "\n";                          // archivo nuevo
-  else if (top) md = afterFrontmatter(old, section);
-  else md = old.trimEnd() + "\n\n" + section + "\n";
-  await invoke("write_text", { path: file, content: md });
-}
-
-// Inserta `section` justo después de las propiedades (el bloque --- … ---) o al principio.
-function afterFrontmatter(old, section) {
-  const properties = old.match(/^---\n[\s\S]*?\n---\n/);
-  const at = properties ? properties[0].length : 0;
-  return old.slice(0, at) + (at ? "\n" : "") + section + "\n\n" + old.slice(at).replace(/^\n+/, "");
-}
-
-// Resumen del libro (de sus metadatos) en su propia sección, arriba de los subrayados.
-async function writeSummary(info, description) {
-  if (description) await writeSection(info, "Resumen", `## Resumen\n\n${description}`, true);
-}
-
-// Propiedades del archivo para Obsidian (solo se escriben al crearlo).
-function frontmatter(info) {
-  const quote = (s) => `"${String(s).replace(/"/g, '\\"')}"`;
-  const lines = ["---", `title: ${quote(info.title)}`];
-  if (info.author) lines.push(`author: ${quote(info.author)}`);
-  lines.push(`source: ${quote(info.source)}`, "tags: [libro]", "---", "", "");
-  return lines.join("\n");
-}
-
-// Subrayados como Markdown, bajo "## <origen>": agrupados por capítulo, cada uno como
-// cita seguida de su comentario. Sirve para los de FastRead, Kindle y Kobo:
-// cada subrayado es { text, note, chapter }.
-function clipsMarkdown(source, clips) {
-  const out = [`## ${source}`];
-  let chapter = null;
-  for (const c of clips) {
-    if (c.chapter && c.chapter !== chapter) out.push("", `### ${c.chapter}`);
-    chapter = c.chapter;
-    if (c.text) out.push("", c.text.split("\n").map((line) => ("> " + line).trimEnd()).join("\n"));
-    if (c.note) out.push("", c.note);
-  }
-  return out.join("\n");
 }
 
 // ── Propiedades de lectura ──
@@ -138,17 +80,13 @@ function clipsMarkdown(source, clips) {
 
 async function saveReading() {
   if (!book || !notesDir) return;
-  const file = `${notesDir}/${notesName()}.md`;
+  const progress = Math.round((100 * pos) / Math.max(1, book.words.length - 1));
+  const set = [["progress", String(progress)], ["wpm", String(wpm)]];
+  if (coverSaved) set.push(["cover", `"[[${notesName()}.jpg]]"`]); // portada (en portadas/)
+  const keep = [["started", startedOn()]]; // estas solo se escriben si aún no existen
+  if (progress === 100) keep.push(["finished", today()]);
   try {
-    const old = await invoke("read_text", { path: file });
-    const progress = Math.round((100 * pos) / Math.max(1, book.words.length - 1));
-    const keep = { started: startedOn() };
-    if (progress === 100) keep.finished = today();
-    const info = { title: book.title, author: book.author, source: path.split(/[\\/]/).pop() };
-    const set = { progress, wpm };
-    if (coverSaved) set.cover = `"[[${notesName()}.jpg]]"`; // portada (en portadas/)
-    const md = updateProperties(old || frontmatter(info), set, keep);
-    if (md !== old) await invoke("write_text", { path: file, content: md });
+    await invoke("notes_properties", { dir: notesDir, info: bookInfo(), set, keep });
   } catch (e) {
     notify("No se pudo actualizar la nota: " + e);
   }
@@ -182,25 +120,6 @@ function startedOn() {
 }
 
 const today = () => new Date().toLocaleDateString("sv-SE"); // "2026-10-12", en hora local
-
-// Escribe propiedades en el bloque --- … --- del principio de una nota (lo crea si no hay)
-// sin tocar las demás. Las de `set` se reemplazan o añaden; las de `keep`, solo se añaden
-// si aún no existen (p. ej. la fecha de inicio).
-function updateProperties(md, set, keep = {}) {
-  const block = md.match(/^---\n([\s\S]*?)\n?---\n/);
-  const lines = block ? block[1].split("\n").filter((l) => l !== "") : [];
-  const rest = block ? md.slice(block[0].length) : "\n" + md;
-  const has = (key) => lines.findIndex((l) => l.startsWith(key + ":"));
-  for (const [key, value] of Object.entries(set)) {
-    const i = has(key);
-    if (i >= 0) lines[i] = `${key}: ${value}`;
-    else lines.push(`${key}: ${value}`);
-  }
-  for (const [key, value] of Object.entries(keep)) {
-    if (has(key) < 0) lines.push(`${key}: ${value}`);
-  }
-  return `---\n${lines.join("\n")}\n---\n${rest}`;
-}
 
 // ── Modo subrayado ──
 

@@ -1,4 +1,5 @@
 # Compilación de Rust/Tauri: se regenera con `cargo tauri build` (incluye la .app y el .dmg)
+target/
 src-tauri/target/
 # Esquemas que Tauri genera al compilar
 src-tauri/gen/
@@ -13,3 +14,6 @@ src-tauri/gen/
 
 # Guía personal de mejoras pendientes
 MEJORAS.md
+
+# Plan de migración a egui (personal)
+PLAN-EGUI.md

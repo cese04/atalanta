@@ -1,60 +1,24 @@
-// Pruebas de ui/rhythm.js: diálogos y duración de cada palabra.
+// Pruebas de ui/rhythm.js: el tiempo de cada palabra en la interfaz y dónde seguir al reanudar.
+// La pausa de cada palabra, el diálogo y los separadores los calcula Rust (core/tests/rhythm.rs).
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { loadUI, bookFrom } = require("./load-ui.js");
 
-// Marca con *asteriscos* las palabras que la app considera diálogo.
-function dialogue(text) {
+const [SPEECH, SENTENCE_END, COMMA, ABBREVIATION] = [1, 2, 4, 8]; // como en core/src/rhythm.rs
+
+test("con ritmo natural se usa la pausa calculada por Rust", () => {
   const ui = loadUI();
-  ui.run(`book = ${JSON.stringify(bookFrom(text))}`);
-  const speech = ui.get("Array.from(findSpeech())");
-  return ui.get("book.words").map((w, i) => (speech[i] ? `*${w}*` : w)).join(" ");
-}
-
-test("diálogo con raya: los incisos del narrador no son diálogo", () => {
-  assert.equal(dialogue("—Ya voy —dijo Juan—. Espera un poco."), "*—Ya* *voy* —dijo Juan—. *Espera* *un* *poco.*");
-  assert.equal(dialogue("—No —respondió—, no lo creo."), "*—No* —respondió—, *no* *lo* *creo.*");
-  assert.equal(dialogue("—¿Qué hora es? —preguntó ella."), "*—¿Qué* *hora* *es?* —preguntó ella.");
-});
-
-test("diálogo entre comillas, en español e inglés", () => {
-  assert.equal(dialogue("Entonces dijo: «Ven aquí», y se fue."), "Entonces dijo: *«Ven* *aquí»,* y se fue.");
-  assert.equal(dialogue("He said, “Come here.” Then he left."), "He said, *“Come* *here.”* Then he left.");
-  assert.equal(dialogue("“Don’t go,” she whispered, “please.”"), "*“Don’t* *go,”* she whispered, *“please.”*");
-  assert.equal(dialogue('"Hello," said Mr. Smith.'), '*"Hello,"* said Mr. Smith.');
-});
-
-test("un apóstrofo no abre ni cierra diálogo", () => {
-  assert.equal(dialogue("The students’ books were old."), "The students’ books were old.");
-});
-
-test("las comillas se reinician en cada párrafo", () => {
-  assert.equal(dialogue("«Una cita sin cerrar|Otro párrafo normal."), "*«Una* *cita* *sin* *cerrar* Otro párrafo normal.");
-});
-
-test("duración de cada palabra con ritmo natural", () => {
-  const ui = loadUI();
-  ui.run("wpm = 300; natural = true; rampLeft = 0");
-  ui.run(`book = ${JSON.stringify(bookFrom(
-    "Era el año 1789, en París. Mr. Smith dijo desafortunadamente algo (sin pensar) y esperó... nada.|—¿Vienes?|* * *|Fin."))}`);
-  const words = ui.get("book.words");
-  const times = Object.fromEntries(words.map((w, i) => [w, Math.round((ui.run(`delayFor(${i})`) / 200) * 100) / 100]));
-  assert.equal(times["Era"], 1);
-  assert.equal(times["1789,"], 2.25);              // coma (1.5) × número (1.5)
-  assert.equal(times["París."], 2);                // fin de frase
-  assert.equal(times["Mr."], 1);                   // abreviatura: no es fin de frase
-  assert.equal(times["desafortunadamente"], 1.5);  // palabra larga
-  assert.equal(times["algo"], 1.3);                // antes de un inciso "("
-  assert.equal(times["esperó..."], 2.5);           // puntos suspensivos
-  assert.equal(times["nada."], 3);                 // fin de párrafo y sigue otra voz
-  assert.equal(times["—¿Vienes?"], 2.5);           // fin de párrafo
+  ui.run(`wpm = 300; natural = true; rampLeft = 0`);
+  ui.run(`book = ${JSON.stringify(bookFrom("uno dos tres", { rhythm: { pauses: [1, 2.25, 3] } }))}`);
+  assert.deepEqual([0, 1, 2].map((i) => ui.run(`delayFor(${i})`) / 200), [1, 2.25, 3]);
 });
 
 test("sin ritmo natural solo hay pausas de frase y coma", () => {
   const ui = loadUI();
-  ui.run("wpm = 300; natural = false; rampLeft = 0");
-  ui.run(`book = ${JSON.stringify(bookFrom("Una palabra desafortunadamente, larga.|Otra"))}`);
-  assert.deepEqual([0, 1, 2, 3].map((i) => ui.run(`delayFor(${i})`) / 200), [1, 1, 1.5, 2]);
+  ui.run(`wpm = 300; natural = false; rampLeft = 0`);
+  const flags = [0, COMMA, SENTENCE_END, SENTENCE_END | ABBREVIATION];
+  ui.run(`book = ${JSON.stringify(bookFrom("Una palabra, larga. Sr.", { rhythm: { pauses: [9, 9, 9, 9], flags } }))}`);
+  assert.deepEqual([0, 1, 2, 3].map((i) => ui.run(`delayFor(${i})`) / 200), [1, 1.5, 2, 2]);
 });
 
 test("arranque gradual: empieza al doble y vuelve a la normalidad", () => {
@@ -67,8 +31,39 @@ test("arranque gradual: empieza al doble y vuelve a la normalidad", () => {
   assert.equal(factors[15], 1);
 });
 
-test("separadores de sección", () => {
+test("diálogo y separadores, según el ritmo del libro", () => {
   const ui = loadUI();
-  ui.run(`book = ${JSON.stringify(bookFrom("Texto.|* * *|§|Capítulo 1"))}`);
-  assert.deepEqual([0, 1, 2, 3].map((i) => ui.run(`isSeparator(${i})`)), [false, true, true, false]);
+  ui.run(`book = ${JSON.stringify(bookFrom("—Hola —dijo.|* * *", { rhythm: { flags: [SPEECH, 0, 0, 0, 0], separators: [1] } }))}`);
+  ui.run("separators = new Set(book.rhythm.separators)");
+  assert.deepEqual([0, 1].map((w) => ui.run(`isSpeech(${w})`)), [true, false]);
+  assert.deepEqual([0, 1].map((i) => ui.run(`isSeparator(${i})`)), [false, true]);
+});
+
+test("inicio de la frase: sin salir del párrafo y sin cortar en abreviaturas", () => {
+  const ui = loadUI();
+  //  0      1      2   3  4    5     6  7       8      9    10
+  // "Llegó tarde. Vio al Sr. Pérez y sonrió.|Nueva idea aquí."
+  const flags = [0, SENTENCE_END, 0, 0, SENTENCE_END | ABBREVIATION, 0, 0, SENTENCE_END, 0, 0, SENTENCE_END];
+  ui.run(`book = ${JSON.stringify(bookFrom("Llegó tarde. Vio al Sr. Pérez y sonrió.|Nueva idea aquí.", { rhythm: { flags } }))}`);
+  const word = (p) => ui.run(`book.words[sentenceStart(${p})]`);
+  assert.equal(word(1), "Llegó"); // primera frase del libro
+  assert.equal(word(6), "Vio");   // "Sr." no termina la frase
+  assert.equal(word(2), "Vio");   // ya en el inicio de la frase
+  assert.equal(word(9), "Nueva"); // no salta al párrafo anterior
+});
+
+test("al reanudar: retrocede solo tras una pausa larga y si no se eligió otra palabra", () => {
+  const ui = loadUI();
+  const flags = [0, SENTENCE_END, 0, 0, 0, 0, 0, SENTENCE_END];
+  ui.run(`book = ${JSON.stringify(bookFrom("Primera frase. Segunda frase con varias palabras más.", { rhythm: { flags } }))}`);
+  assert.equal(ui.run("resumeFrom(6, 10000, false)"), 2); // pausa larga: inicio de "Segunda frase…"
+  assert.equal(ui.run("resumeFrom(6, 1000, false)"), 6);  // pausa corta: sigue donde iba
+  assert.equal(ui.run("resumeFrom(6, 10000, true)"), 6);  // eligió esa palabra: sigue ahí
+});
+
+test("al reanudar: no retrocede más de REWIND_MAX_WORDS en frases muy largas", () => {
+  const ui = loadUI();
+  const longSentence = Array.from({ length: 100 }, (_, i) => `palabra${i}`).join(" ");
+  ui.run(`book = ${JSON.stringify(bookFrom(longSentence))}`);
+  assert.equal(ui.run("resumeFrom(80, 10000, false)"), 80 - ui.run("REWIND_MAX_WORDS"));
 });

@@ -2,17 +2,8 @@
 //! `.kobo/KoboReader.sqlite` (tabla `Bookmark`; los libros y capítulos están en `content`).
 
 use rusqlite::{Connection, OpenFlags};
-use serde::Serialize;
 
-#[derive(Serialize)]
-pub struct Clip {
-    pub title: String,
-    pub author: String,
-    pub chapter: String,
-    pub text: String, // texto subrayado (puede estar vacío si es solo una nota)
-    pub note: String, // comentario
-    pub description: String, // resumen del libro, en texto plano
-}
+pub use crate::notes::Clip;
 
 // Un subrayado apunta a su libro (VolumeID) y al archivo interno del libro donde está
 // (ContentID). En `content`, cada libro tiene:
@@ -45,6 +36,12 @@ const QUERY: &str = "
     LEFT JOIN content file ON file.ContentType = 9 AND file.ContentID = b.ContentID
     WHERE TRIM(IFNULL(b.Text, '')) <> '' OR TRIM(IFNULL(b.Annotation, '')) <> ''
     ORDER BY book.Title, IFNULL(file.VolumeIndex, 0), b.ChapterProgress";
+
+/// Importa los subrayados del Kobo a la carpeta de notas (sección "## Kobo" de cada libro).
+/// Devuelve (subrayados, libros).
+pub fn import(notes_dir: &str, db: &str) -> Result<(usize, usize), String> {
+    crate::notes::write_clips(notes_dir, "Kobo", &highlights(db)?)
+}
 
 pub fn highlights(path: &str) -> Result<Vec<Clip>, String> {
     let db = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY).map_err(|e| e.to_string())?;

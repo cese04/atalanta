@@ -1,0 +1,13 @@
+# Workspace: `core` tiene la lógica (libros, ritmo, notas, importaciones, PDF) sin interfaz;
+# `src-tauri` es la app (Tauri) que la usa.
+[workspace]
+members = ["core", "src-tauri"]
+resolver = "2"
+
+# Optimizaciones para que el ejecutable final sea lo más pequeño posible.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

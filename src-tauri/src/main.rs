@@ -1,10 +1,9 @@
 // Oculta la consola en Windows al compilar en modo release.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod book;
-mod chapters;
-mod cover;
-mod kobo;
+// Comandos que la interfaz (ui/) llama con invoke(). La lógica está en el crate core.
+use fastread_core::notes::{Clip, Info};
+use fastread_core::{book, cover, kindle, kobo, notes, pdf};
 
 /// Lo llama la interfaz (ui/app.js) para abrir un libro.
 #[tauri::command]
@@ -12,16 +11,40 @@ async fn open_book(path: String) -> Result<book::Book, String> {
     book::open(&path)
 }
 
-/// Subrayados de la base de datos de un Kobo (ver kobo.rs).
+/// Un PDF a partir de los renglones de cada página que saca pdf.js (ver ui/pdf-reader.js).
 #[tauri::command]
-async fn kobo_highlights(path: String) -> Result<Vec<kobo::Clip>, String> {
-    kobo::highlights(&path)
+async fn pdf_book(pages: Vec<Vec<pdf::Line>>, outline: Vec<pdf::OutlineItem>, title: String, author: String) -> book::Book {
+    pdf::build(pages, &outline, title, author)
 }
 
-/// Capítulo de cada cita de un libro y su resumen, buscándolo en unas carpetas (ver chapters.rs).
+/// Escribe los subrayados de un origen ("FastRead") en la nota del libro.
 #[tauri::command]
-async fn find_chapters(title: String, quotes: Vec<String>, dirs: Vec<String>) -> chapters::Found {
-    chapters::find(&title, &quotes, &dirs)
+async fn notes_section(dir: String, info: Info, source: String, clips: Vec<Clip>) -> Result<(), String> {
+    notes::write_clips_section(&dir, &info, &source, &clips)
+}
+
+/// Escribe el resumen del libro en su nota (nada si está vacío).
+#[tauri::command]
+async fn notes_summary(dir: String, info: Info, text: String) -> Result<(), String> {
+    notes::write_summary(&dir, &info, &text)
+}
+
+/// Actualiza propiedades de la nota del libro: `set` se reemplazan, `keep` solo si no existen.
+#[tauri::command]
+async fn notes_properties(dir: String, info: Info, set: Vec<(String, String)>, keep: Vec<(String, String)>) -> Result<(), String> {
+    notes::write_properties(&dir, &info, &set, &keep)
+}
+
+/// Importa My Clippings.txt de un Kindle; busca los capítulos en `book_dirs`. Devuelve (subrayados, libros).
+#[tauri::command]
+async fn import_kindle(dir: String, file: String, book_dirs: Vec<String>) -> Result<(usize, usize), String> {
+    kindle::import(&dir, &file, &book_dirs)
+}
+
+/// Importa la base de datos de un Kobo. Devuelve (subrayados, libros).
+#[tauri::command]
+async fn import_kobo(dir: String, file: String) -> Result<(usize, usize), String> {
+    kobo::import(&dir, &file)
 }
 
 /// Portada de un libro EPUB o MOBI (ver cover.rs); vacía si no tiene.
@@ -65,7 +88,10 @@ fn write_text(path: String, content: String) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![open_book, kobo_highlights, find_chapters, book_cover, read_bytes, write_bytes, read_text, write_text])
+        .invoke_handler(tauri::generate_handler![
+            open_book, pdf_book, book_cover, notes_section, notes_summary, notes_properties,
+            import_kindle, import_kobo, read_bytes, write_bytes, read_text, write_text
+        ])
         .run(tauri::generate_context!())
         .expect("error al iniciar FastRead");
 }

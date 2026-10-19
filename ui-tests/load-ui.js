@@ -68,7 +68,8 @@ function loadUI() {
   };
 }
 
-// Un libro a partir de texto: "|" separa párrafos.
+// Un libro a partir de texto: "|" separa párrafos. Su ritmo (que en la app calcula Rust) es
+// neutro salvo que se indique: todas las pausas en 1 y sin marcas.
 function bookFrom(text, extra = {}) {
   const words = [];
   const paragraphs = [];
@@ -76,7 +77,8 @@ function bookFrom(text, extra = {}) {
     paragraphs.push(words.length);
     words.push(...p.trim().split(/\s+/));
   }
-  return { title: "Libro", author: "", toc: [], ...extra, words, paragraphs };
+  const rhythm = { pauses: words.map(() => 1), flags: words.map(() => 0), separators: [], ...extra.rhythm };
+  return { title: "Libro", author: "", toc: [], note_name: extra.title || "Libro", ...extra, words, paragraphs, rhythm };
 }
 
 module.exports = { loadUI, bookFrom };

@@ -85,7 +85,7 @@ en EPUB o MOBI sin protección (no sirve con los comprados en Amazon) y con índ
 ```sh
 cd src-tauri
 cargo tauri dev     # abrir en modo desarrollo (recarga al editar ui/)
-cargo tauri build   # crear FastRead.app y el .dmg en src-tauri/target/release/bundle/
+cargo tauri build   # crear FastRead.app y el .dmg en target/release/bundle/
 ```
 
 ## Pruebas
@@ -94,42 +94,51 @@ cargo tauri build   # crear FastRead.app y el .dmg en src-tauri/target/release/b
 ./test.sh
 ```
 
-Corre las pruebas de Rust (`cargo test`) y las de la interfaz (`node --test`, sin instalar
-nada más). Conviene correrlas antes de cada commit.
+Corre las pruebas de Rust (`cargo test -p fastread-core`) y las de la interfaz (`node --test`,
+sin instalar nada más). Conviene correrlas antes de cada commit.
 
 Cada parte tiene su carpeta de pruebas:
 
-- `src-tauri/tests/`: una prueba por archivo de `src-tauri/src` (book.rs, kobo.rs, chapters.rs).
-  Cada archivo de código termina con `mod tests`, que apunta a su prueba; así las pruebas
-  pueden usar funciones internas. Sus archivos de prueba están en `src-tauri/tests/resources/`:
-  el contenido de un EPUB (`libro-de-prueba/`, que las pruebas comprimen), sus variantes de
-  `content.opf` (`opf/`) y una base de datos de Kobo (`kobo.sql`).
-- `ui-tests/`: pruebas de la interfaz (`*.test.js`). Están fuera de `ui/` para que no se
-  empaqueten dentro de la app. `load-ui.js` carga los archivos de `ui/` en un entorno
-  simulado (sin navegador ni Tauri) para probar sus funciones. Sus archivos de prueba
-  (un `My Clippings.txt` de Kindle y una nota existente de Obsidian) están en `ui-tests/resources/`.
+- `core/tests/`: una prueba por archivo de `core/src`. Cada archivo de código termina con
+  `mod tests`, que apunta a su prueba; así las pruebas pueden usar funciones internas. Sus
+  archivos de prueba están en `core/tests/resources/`: el contenido de un EPUB
+  (`libro-de-prueba/`, que las pruebas comprimen), sus variantes de `content.opf` (`opf/`),
+  una base de datos de Kobo (`kobo.sql`), un `My Clippings.txt` de Kindle, una nota existente
+  de Obsidian y los renglones de un PDF de ejemplo (`pdf-paginas.json`).
+- `ui-tests/`: pruebas de lo que queda en la interfaz (`*.test.js`). Están fuera de `ui/` para
+  que no se empaqueten dentro de la app. `load-ui.js` carga los archivos de `ui/` en un
+  entorno simulado (sin navegador ni Tauri) para probar sus funciones.
 
 ## Dónde está cada cosa
+
+El proyecto es un *workspace* de Cargo con dos crates: **`core`**, toda la lógica sin interfaz
+(se puede reutilizar con otra interfaz), y **`src-tauri`**, la app, que solo conecta `core`
+con la interfaz web de `ui/` mediante comandos.
 
 | Archivo | Qué hace |
 |---|---|
 | `ui/index.html` | Estructura de la ventana, ayuda de atajos y editor de subrayados |
 | `ui/style.css` | Temas de color, tamaños, tipografía |
 | `ui/app.js` | Lectura, vistas (lector y texto completo), índice, ajustes y teclado |
-| `ui/pdf-reader.js` | Abre PDF con pdf.js (`ui/vendor/pdfjs`) y reconstruye párrafos, títulos e índice |
-| `ui/rhythm.js` | Cuánto dura cada palabra (pausas, ritmo natural) y qué es diálogo |
-| `ui/notes.js` | Subrayados: modo subrayado, editor y archivos para Obsidian |
-| `ui/import.js` | Importar subrayados de Kindle (My Clippings.txt) y Kobo |
+| `ui/pdf-reader.js` | Saca con pdf.js (`ui/vendor/pdfjs`) los renglones, marcadores y portada de un PDF |
+| `ui/rhythm.js` | Tiempo de cada palabra a la velocidad elegida, arranque gradual y dónde seguir al reanudar |
+| `ui/notes.js` | Subrayados: modo subrayado, editor, sus datos y las propiedades de lectura que se piden |
+| `ui/import.js` | Elegir los archivos de Kindle y Kobo y avisar del resultado de la importación |
 | `ui/menu.js` | Menú principal y libros recientes |
-| `src-tauri/src/book.rs` | Lee EPUB/MOBI: palabras, párrafos, índice, título y autor |
-| `src-tauri/src/kobo.rs` | Lee los subrayados de la base de datos de un Kobo |
-| `src-tauri/src/cover.rs` | Extrae la portada de un EPUB o MOBI |
-| `src-tauri/src/chapters.rs` | Busca en qué capítulo de un libro está cada cita (para Kindle) |
-| `src-tauri/src/main.rs` | Arranca la app; comandos `open_book`, `kobo_highlights`, `find_chapters`, `book_cover`, `read_bytes`, `write_bytes`, `read_text`, `write_text` |
+| `core/src/book.rs` | Lee EPUB/MOBI: palabras, párrafos, formato, índice, título, autor y resumen |
+| `core/src/pdf.rs` | Reconstruye un libro a partir de los renglones de un PDF |
+| `core/src/rhythm.rs` | Pausa de cada palabra (ritmo natural), diálogo y separadores de sección |
+| `core/src/notes.rs` | Notas de Obsidian: secciones, resumen, propiedades y nombres de archivo |
+| `core/src/kindle.rs` | Lee e importa My Clippings.txt de un Kindle |
+| `core/src/kobo.rs` | Lee e importa los subrayados de la base de datos de un Kobo |
+| `core/src/chapters.rs` | Busca en qué capítulo de un libro está cada cita (para Kindle) |
+| `core/src/cover.rs` | Extrae la portada de un EPUB o MOBI |
+| `src-tauri/src/main.rs` | Arranca la app y expone `core` a la interfaz como comandos (`open_book`, `pdf_book`, `notes_*`, `import_*`…) |
 
 Cambios fáciles:
 
-- Pausas y tiempos del cambio de capítulo: valores al inicio de `ui/rhythm.js`.
+- Pausas de cada palabra (ritmo natural): constantes `PAUSE_*` al inicio de `core/src/rhythm.rs`.
+- Tiempos del cambio de capítulo, del parpadeo y al reanudar: valores al inicio de `ui/rhythm.js`.
 - Un tema nuevo: 6 colores en `ui/style.css` y una línea en `THEMES` (`ui/app.js`).
 - Tamaño de la palabra: `#word` en `ui/style.css`. Rango de velocidad: `index.html` (`min`/`max`) y `setWpm()`.
 

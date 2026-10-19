@@ -2,26 +2,11 @@
 name = "fastread"
 version = "0.1.0"
 edition = "2021"
-# Las pruebas de tests/ se compilan dentro de cada archivo de src/ (ver `mod tests`),
-# no como pruebas independientes.
-autotests = false
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+fastread-core = { path = "../core" }       # la lógica: libros, ritmo, notas, importaciones
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"                 # ventana "Abrir archivo"
-serde = { version = "1", features = ["derive"] }
-zip = { version = "2", default-features = false, features = ["deflate"] }  # un EPUB es un .zip
-roxmltree = "0.20"                        # leer los XML del EPUB
-mobi = "0.8"                              # leer archivos MOBI
-rusqlite = { version = "0.40", features = ["bundled"] }  # leer los subrayados de un Kobo
-
-# Optimizaciones para que el ejecutable final sea lo más pequeño posible.
-[profile.release]
-codegen-units = 1
-lto = true
-opt-level = "s"
-panic = "abort"
-strip = true

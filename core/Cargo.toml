@@ -1,0 +1,17 @@
+[package]
+name = "fastread-core"
+version = "0.1.0"
+edition = "2021"
+# Las pruebas de tests/ se compilan dentro de cada archivo de src/ (ver `mod tests`),
+# no como pruebas independientes.
+autotests = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }  # un EPUB es un .zip
+roxmltree = "0.20"                        # leer los XML del EPUB
+mobi = "0.8"                              # leer archivos MOBI
+rusqlite = { version = "0.40", features = ["bundled"] }  # leer los subrayados de un Kobo
+
+[dev-dependencies]
+serde_json = "1"                          # leer los datos de prueba en JSON

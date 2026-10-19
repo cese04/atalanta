@@ -20,6 +20,28 @@ pub struct Book {
     pub scene_breaks: Vec<usize>, // párrafos precedidos por un separador <hr/>
     pub styles: Vec<(usize, usize, u8)>, // tramos de palabras con estilo: (desde, hasta sin incluir, STYLE_*)
     pub toc: Vec<Chapter>,
+    pub rhythm: crate::rhythm::Rhythm, // pausa y marcas de cada palabra (ver rhythm.rs)
+    pub note_name: String,             // nombre de su nota de Obsidian, sin ".md" (ver notes.rs)
+}
+
+impl Book {
+    /// Arma un libro y calcula lo que se deriva de su texto: el ritmo de lectura y el nombre de su nota.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        title: String,
+        author: String,
+        description: String,
+        words: Vec<String>,
+        paragraphs: Vec<usize>,
+        kinds: Vec<&'static str>,
+        scene_breaks: Vec<usize>,
+        styles: Vec<(usize, usize, u8)>,
+        toc: Vec<Chapter>,
+    ) -> Book {
+        let rhythm = crate::rhythm::analyze(&words, &paragraphs);
+        let note_name = crate::notes::file_name(&title);
+        Book { title, author, description, words, paragraphs, kinds, scene_breaks, styles, toc, rhythm, note_name }
+    }
 }
 
 #[derive(Serialize)]
@@ -454,17 +476,8 @@ impl Text {
                 word_styles.iter_mut().for_each(|s| *s &= !bit);
             }
         }
-        Book {
-            title,
-            author,
-            description: String::new(),
-            words: self.words,
-            paragraphs: self.paragraphs,
-            kinds,
-            scene_breaks: self.scene_breaks,
-            styles: style_runs(&word_styles),
-            toc,
-        }
+        let styles = style_runs(&word_styles);
+        Book::new(title, author, String::new(), self.words, self.paragraphs, kinds, self.scene_breaks, styles, toc)
     }
 }
 
