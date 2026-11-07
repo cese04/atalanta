@@ -165,11 +165,36 @@ function renderToc() {
     li.children[0].textContent = chapter.title;
     li.children[1].textContent = formatMinutes(lengths[i] / wpm);
     li.children[2].style.width = (100 * lengths[i]) / longest + "%";
+    li.tabIndex = -1; // con el teclado se llega por tocKey
     li.onclick = () => goTo(chapter.word);
+    li.onmousedown = (e) => e.preventDefault(); // un clic no lo enfoca: las flechas siguen siendo del lector
     $("toc").append(li);
   });
   $("info").textContent = `${formatMinutes(book.words.length / wpm)} de lectura a ${wpm} palabras/min`;
   currentLi = null;
+  setTocStop($("toc").firstElementChild);
+}
+
+// El índice es una sola parada de Tab: solo un capítulo tiene tabIndex 0 (el actual, o el
+// último al que se movió el teclado). Dentro, ↑ ↓ Inicio Fin mueven y Enter abre el capítulo.
+let tocStop = null;
+function setTocStop(li) {
+  if (tocStop) tocStop.tabIndex = -1;
+  if (li) li.tabIndex = 0;
+  tocStop = li;
+}
+
+// Tecla con el foco en un capítulo del índice. Devuelve true si la usó.
+function tocKey(e) {
+  const items = [...$("toc").children];
+  const i = items.indexOf(e.target);
+  const to = { ArrowUp: i - 1, ArrowDown: i + 1, Home: 0, End: items.length - 1 }[e.key];
+  if (e.key === "Enter") goTo(book.toc[i].word);
+  else if (items[to]) {
+    setTocStop(items[to]);
+    items[to].focus();
+  } else return to !== undefined; // en el primero o el último, ↑ ↓ no hacen nada
+  return true;
 }
 
 // Palabras de cada capítulo: desde su inicio hasta el siguiente capítulo
@@ -406,6 +431,7 @@ function show() {
   // Progreso del libro y del capítulo actual
   const total = book.words.length;
   $("progress").value = pos;
+  $("progress").setAttribute("aria-valuetext", `${percent(pos, total)} del libro`);
   $("bookStatus").textContent = `Libro ${percent(pos, total)} · quedan ${formatMinutes((total - pos) / wpm)}`;
   const c = chapterAt(pos);
   $("head").textContent = c < 0 ? "" : book.toc[c].title;
@@ -445,8 +471,11 @@ function highlightChapter(index) {
   const li = $("toc").children[index] || null;
   if (li === currentLi) return;
   currentLi?.classList.remove("current");
+  currentLi?.removeAttribute("aria-current");
   li?.classList.add("current");
+  li?.setAttribute("aria-current", "true");
   li?.scrollIntoView({ block: "nearest" });
+  if (li && !$("toc").contains(document.activeElement)) setTocStop(li); // Tab entra por el capítulo actual
   currentLi = li;
 }
 
@@ -574,7 +603,7 @@ async function switchView(paused, from, to) {
   setPaused(paused);
   const sizes = [fontSize($("word")), fontSize($("cur"))]; // la palabra en el texto puede estar en un título
   const [fromSize, toSize] = paused ? sizes : sizes.reverse();
-  if (onStage(from) && onStage(to)) {
+  if (onStage(from) && onStage(to) && !reducedMotion.matches) {
     $("word").style.visibility = $("cur").style.visibility = "hidden";
     await fly(from, to, fromSize, toSize);
     $("word").style.visibility = $("cur").style.visibility = "";
@@ -611,6 +640,9 @@ function onStage(rect) {
 }
 
 const fontSize = (el) => parseFloat(getComputedStyle(el).fontSize);
+
+// El sistema pide menos movimiento: sin vuelo de la palabra (y sin parpadeo, ver style.css).
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 // ── Ajustes (se cambian desde el menú Ver) ──
 
@@ -732,6 +764,7 @@ function setWpm(value) {
   wpm = Math.max(100, Math.min(1000, value));
   $("wpm").value = wpm;
   $("wpmLabel").textContent = wpm + " p/min";
+  $("wpm").setAttribute("aria-valuetext", wpm + " palabras por minuto");
   localStorage.setItem("wpm", wpm);
   if (book) {
     renderToc(); // los tiempos estimados dependen de la velocidad
@@ -775,6 +808,7 @@ document.addEventListener("keydown", (e) => {
     }
     return;
   }
+  if (e.target.parentElement === $("toc") && tocKey(e)) return e.preventDefault();
   if (e.key === "?") toggleHelp();
   else if (e.key === "Escape") {
     toggleHelp(false);
@@ -790,7 +824,9 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "s" || e.key === "S") highlightKey();
   else return;
   e.preventDefault();
-  document.activeElement.blur?.(); // evita que un control enfocado también reaccione
+  // Con un botón enfocado, Espacio también lo pulsaría al soltar la tecla. Las flechas ya no
+  // mueven los deslizadores por el preventDefault, así que el foco se queda donde estaba.
+  if (e.code === "Space") document.activeElement.blur?.();
 });
 
 // ── Al iniciar (cuando ya cargaron todos los archivos .js): aplicar ajustes y reabrir el último libro ──

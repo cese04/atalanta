@@ -11,7 +11,7 @@
     <img id="coverThumb" alt="" hidden>
     <h1 id="title"></h1>
     <p id="info"></p>
-    <ul id="toc"></ul>
+    <ul id="toc" aria-label="Índice"></ul>
   </aside>
 
   <!-- Lector: dos vistas superpuestas. Leyendo se ve #reader; en pausa, #page. -->
@@ -44,13 +44,13 @@
     <!-- Controles, compartidos por ambas vistas -->
     <div id="bar">
       <div id="controls">
-        <button id="back" title="Retroceder 10 palabras (←)">−10</button>
+        <button id="back" title="Retroceder 10 palabras (←)" aria-label="Retroceder 10 palabras">−10</button>
         <button id="play" title="Leer / pausar (espacio)">Leer</button>
-        <button id="fwd" title="Avanzar 10 palabras (→)">+10</button>
-        <input id="wpm" type="range" min="100" max="1000" step="25" title="Velocidad (↑ ↓)">
+        <button id="fwd" title="Avanzar 10 palabras (→)" aria-label="Avanzar 10 palabras">+10</button>
+        <input id="wpm" type="range" min="100" max="1000" step="25" title="Velocidad (↑ ↓)" aria-label="Velocidad">
         <span id="wpmLabel"></span>
       </div>
-      <input id="progress" type="range" min="0" max="0" value="0">
+      <input id="progress" type="range" min="0" max="0" value="0" aria-label="Posición en el libro">
       <p id="status">
         <span id="chapterStatus"></span><span id="bookStatus"></span>
         <button id="helpButton" title="Atajos de teclado (?)">Atajos <kbd>?</kbd></button>
@@ -88,10 +88,10 @@
       <label>Comentario <textarea id="noteComment" rows="3" placeholder="Opcional"></textarea></label>
       <div id="noteColors" class="colors">
         Color
-        <label title="Amarillo"><input type="radio" name="color" value="amarillo"><span data-color="amarillo"></span></label>
-        <label title="Verde"><input type="radio" name="color" value="verde"><span data-color="verde"></span></label>
-        <label title="Azul"><input type="radio" name="color" value="azul"><span data-color="azul"></span></label>
-        <label title="Rosa"><input type="radio" name="color" value="rosa"><span data-color="rosa"></span></label>
+        <label title="Amarillo"><input type="radio" name="color" value="amarillo" aria-label="Amarillo"><span data-color="amarillo"></span></label>
+        <label title="Verde"><input type="radio" name="color" value="verde" aria-label="Verde"><span data-color="verde"></span></label>
+        <label title="Azul"><input type="radio" name="color" value="azul" aria-label="Azul"><span data-color="azul"></span></label>
+        <label title="Rosa"><input type="radio" name="color" value="rosa" aria-label="Rosa"><span data-color="rosa"></span></label>
       </div>
       <div class="actions">
         <button type="button" id="noteDelete">Eliminar</button>
@@ -102,7 +102,8 @@
     </form>
   </dialog>
 
-  <p id="toast"></p>
+  <!-- Avisos breves (notify en app.js); role="status" hace que un lector de pantalla los lea -->
+  <p id="toast" role="status"></p>
 
   <!-- Orden: app.js primero (define $, invoke...), los demás lo usan. -->
   <script src="rhythm.js"></script>

@@ -42,6 +42,7 @@ function loadUI() {
       removeItem: (key) => storage.delete(key),
     },
     getSelection: fakeElement,
+    matchMedia: () => ({ matches: false }), // sin "movimiento reducido"
     setTimeout: () => 0, // los temporizadores (menú, avisos) no hacen falta en las pruebas
     clearTimeout() {},
     addEventListener() {},
