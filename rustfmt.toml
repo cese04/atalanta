@@ -1,0 +1,4 @@
+# El código de FastRead está formateado a mano (más compacto que el estilo de rustfmt).
+# Esto evita que rustfmt lo reescriba al guardar o al pasar herramientas como Trunk o
+# `cargo fmt`. Quítalo si algún día se quiere adoptar el formato de rustfmt para todo.
+disable_all_formatting = true
