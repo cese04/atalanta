@@ -21,18 +21,19 @@ function contrast(a, b) {
 
 const themes = [...css.matchAll(/\[data-theme="([^"]+)"\] \{([^}]*)\}/g)].map(([, name, body]) => {
   const color = (key) => body.match(new RegExp(`--${key}: (#[0-9a-f]{6})`))[1];
-  return { name, bg: color("bg"), fg: color("fg"), muted: color("muted"), accent: color("accent") };
+  return { name, bg: color("bg"), fg: color("fg"), muted: color("muted"), accent: color("accent"), error: color("error") };
 });
 
 test("hay temas que revisar", () => {
   assert.ok(themes.length >= 12);
 });
 
-// Texto y texto secundario: 4.5:1. Acento (letra ancla, capítulo actual, anillo de foco): 3:1.
+// Texto, texto secundario y errores: 4.5:1. Acento (letra ancla, capítulo actual, anillo de foco): 3:1.
 for (const t of themes) {
   test(`contraste del tema ${t.name}`, () => {
     assert.ok(contrast(t.fg, t.bg) >= 4.5, `texto ${contrast(t.fg, t.bg).toFixed(2)}`);
     assert.ok(contrast(t.muted, t.bg) >= 4.5, `secundario ${contrast(t.muted, t.bg).toFixed(2)}`);
+    assert.ok(contrast(t.error, t.bg) >= 4.5, `error ${contrast(t.error, t.bg).toFixed(2)}`);
     assert.ok(contrast(t.accent, t.bg) >= 3, `acento ${contrast(t.accent, t.bg).toFixed(2)}`);
   });
 }

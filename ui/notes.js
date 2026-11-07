@@ -15,6 +15,7 @@ let notesDir = localStorage.getItem("notesDir") || "";
 let highlighting = false; // modo subrayado
 let editing = null;       // subrayado abierto en el editor
 let coverSaved = false;   // la portada del libro abierto está en <carpeta>/portadas/
+let drafts = new Map();   // lo escrito en el editor sin guardar: { text, note, color } por subrayado (ver draftKey)
 
 // Colores de marcatextos (los valores están en style.css). El primero es el de siempre.
 const MARK_COLORS = ["amarillo", "verde", "azul", "rosa"];
@@ -36,6 +37,25 @@ async function chooseNotesDir() {
   return true;
 }
 
+// Botón de los avisos de error al escribir en la carpeta de notas: casi siempre se arregla
+// eligiéndola de nuevo (se movió, se renombró o perdió los permisos). Los subrayados del libro
+// abierto se guardan tal como los ves (chooseNotesDir cargaría los de la carpeta nueva, sin el
+// que no se pudo guardar).
+const chooseFolder = {
+  label: "Elegir carpeta de notas…",
+  run: async () => {
+    const unsaved = highlights;
+    if (!(await chooseNotesDir()) || !book) return;
+    if (unsaved.length) {
+      highlights = unsaved;
+      renderPage();
+      show();
+      await saveHighlights();
+    }
+    await saveReading();
+  },
+};
+
 // Nombre de la nota del libro (sin ".md"); lo calcula Rust (notes::file_name en core/src/notes.rs).
 const notesName = () => book.note_name;
 
@@ -55,7 +75,8 @@ async function loadHighlights() {
 
 // Guarda los subrayados: sus datos en .fastread/<Título>.json (para poder editarlos) y la
 // sección "## FastRead" y el resumen en la nota (eso lo escribe Rust: core/src/notes.rs).
-async function saveHighlights() {
+// Al terminar muestra `message` (con las opciones de notify).
+async function saveHighlights(message = `Guardado en ${notesName()}.md`, options = {}) {
   const data = { title: book.title, author: book.author, source: path, highlights };
   try {
     await invoke("write_text", {
@@ -64,9 +85,9 @@ async function saveHighlights() {
     });
     await invoke("notes_section", { dir: notesDir, info: bookInfo(), source: "FastRead", clips: highlights });
     await invoke("notes_summary", { dir: notesDir, info: bookInfo(), text: book.description });
-    notify(`Guardado en ${notesName()}.md`);
+    notify(message, options);
   } catch (e) {
-    notify("No se pudieron guardar las notas: " + e);
+    notify("No se pudieron guardar las notas: " + e, { error: true, action: chooseFolder });
   }
 }
 
@@ -88,7 +109,7 @@ async function saveReading() {
   try {
     await invoke("notes_properties", { dir: notesDir, info: bookInfo(), set, keep });
   } catch (e) {
-    notify("No se pudo actualizar la nota: " + e);
+    notify("No se pudo actualizar la nota: " + e, { error: true, action: chooseFolder });
   }
 }
 
@@ -105,7 +126,7 @@ async function saveCover(blob) {
     try {
       await invoke("write_bytes", { path: file, bytes: Array.from(new Uint8Array(await blob.arrayBuffer())) });
     } catch (e) {
-      return notify("No se pudo guardar la portada: " + e);
+      return notify("No se pudo guardar la portada: " + e, { error: true, action: chooseFolder });
     }
   }
   coverSaved = true;
@@ -177,15 +198,30 @@ function textOf(start, end) {
 
 // ── Editor ──
 
+// Borradores: si cierras el editor sin guardar (Esc, Cancelar), lo escrito se guarda aparte y
+// vuelve al reabrir ese subrayado, o la misma selección si era nuevo. Duran mientras la app
+// esté abierta.
+const draftKey = (h) => `${path}:${h.id || h.start + "-" + h.end}`;
+
+// Lo que muestra el editor ahora mismo.
+const editorValues = () => ({
+  text: $("noteText").value,
+  note: $("noteComment").value,
+  color: document.querySelector("#noteColors input:checked")?.value || MARK_COLORS[0],
+});
+
 // Abre el editor para un subrayado nuevo ({ start, end }) o uno existente.
+let editorStart = null; // los valores al abrir, para saber si cambió algo
 function openEditor(h) {
   editing = h;
   const chapter = chapterAt(h.start);
   $("noteChapter").textContent = chapter < 0 ? book.title : book.toc[chapter].title;
-  $("noteText").value = h.text ?? textOf(h.start, h.end);
-  $("noteComment").value = h.note ?? "";
   const color = h.id ? markColor(h) : markColor({ color: localStorage.getItem("markColor") }); // nuevo: el último usado
-  document.querySelector(`#noteColors input[value="${color}"]`).checked = true;
+  editorStart = { text: h.text ?? textOf(h.start, h.end), note: h.note ?? "", color };
+  const shown = drafts.get(draftKey(h)) || editorStart;
+  $("noteText").value = shown.text;
+  $("noteComment").value = shown.note;
+  document.querySelector(`#noteColors input[value="${shown.color}"]`).checked = true;
   $("noteDelete").hidden = !h.id;
   $("noteDialog").returnValue = "";
   $("noteDialog").showModal();
@@ -201,13 +237,24 @@ $("noteDialog").onclose = async () => {
   getSelection().removeAllRanges();
   const h = editing;
   editing = null;
-  if ($("noteDialog").returnValue !== "save" || !h) return;
+  if (!h) return;
+  const result = $("noteDialog").returnValue;
+  if (result !== "save") {
+    // Cerrado sin guardar: si algo cambió, se conserva como borrador (salvo al eliminar).
+    const now = editorValues();
+    const changed = Object.keys(now).some((k) => now[k] !== editorStart[k]);
+    if (changed && result !== "deleted") drafts.set(draftKey(h), now);
+    else drafts.delete(draftKey(h));
+    return;
+  }
   const text = $("noteText").value.trim();
   if (!text) return;
   if (!notesDir && !(await chooseNotesDir())) {
-    notify("Elige una carpeta de notas para guardar los subrayados");
+    drafts.set(draftKey(h), editorValues()); // no se pierde: sigue en el borrador
+    notify("Elige una carpeta de notas para guardar los subrayados", { action: chooseFolder });
     return;
   }
+  drafts.delete(draftKey(h));
   h.text = text;
   h.note = $("noteComment").value.trim();
   h.color = document.querySelector("#noteColors input:checked")?.value || MARK_COLORS[0];
@@ -224,10 +271,21 @@ $("noteDialog").onclose = async () => {
   await saveHighlights();
 };
 
+// Eliminar no pide confirmación: el aviso ofrece Deshacer durante unos segundos.
 $("noteDelete").onclick = async () => {
   const h = editing;
+  const bookPath = path;
   highlights = highlights.filter((x) => x !== h);
   $("noteDialog").close("deleted");
   refreshParagraphs(h.start, h.end);
-  await saveHighlights();
+  await saveHighlights("Subrayado eliminado", { undo: () => restoreHighlight(h, bookPath) });
 };
+
+// Deshacer: vuelve a poner el subrayado eliminado (si sigue abierto el mismo libro).
+async function restoreHighlight(h, bookPath) {
+  if (path !== bookPath || highlights.includes(h)) return;
+  highlights.push(h);
+  highlights.sort((a, b) => a.start - b.start);
+  refreshParagraphs(h.start, h.end);
+  await saveHighlights("Subrayado restaurado");
+}

@@ -35,6 +35,13 @@
         <figure id="cover" hidden><img alt="Portada"></figure>
         <div id="text"></div>
       </div>
+      <!-- Avisos (notify en app.js), centrados sobre los controles. role="status": un lector de
+           pantalla lee el texto; los errores, de inmediato (aria-live="assertive"). -->
+      <div id="toast">
+        <span id="toastText" role="status"></span>
+        <button id="toastAction" hidden></button>
+        <button id="toastClose" hidden>Cerrar</button>
+      </div>
       <p id="modeHint">Modo subrayado · selecciona un fragmento · clic en un subrayado para editarlo · <kbd>Esc</kbd> para salir</p>
     </div>
 
@@ -71,7 +78,8 @@
       <tr><td><kbd>S</kbd></td><td>Modo subrayado (o subrayar el texto seleccionado)</td></tr>
       <tr><td>Clic en un subrayado</td><td>Editarlo o eliminarlo (en modo subrayado)</td></tr>
       <tr><td><kbd>⌘</kbd> <kbd>Enter</kbd></td><td>Guardar el subrayado que se está editando</td></tr>
-      <tr><td><kbd>Esc</kbd></td><td>Salir del modo subrayado o cerrar esta ayuda</td></tr>
+      <tr><td><kbd>⌘Z</kbd> o <kbd>U</kbd></td><td>Deshacer la eliminación de un subrayado (mientras se ve el aviso)</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Salir del modo subrayado, cerrar esta ayuda o un aviso</td></tr>
       <tr><th colspan="2">General</th></tr>
       <tr><td><kbd>⌘O</kbd></td><td>Abrir libro</td></tr>
       <tr><td><kbd>⌥⌘S</kbd></td><td>Mostrar u ocultar el índice</td></tr>
@@ -102,8 +110,6 @@
     </form>
   </dialog>
 
-  <!-- Avisos breves (notify en app.js); role="status" hace que un lector de pantalla los lea -->
-  <p id="toast" role="status"></p>
 
   <!-- Orden: app.js primero (define $, invoke...), los demás lo usan. -->
   <script src="rhythm.js"></script>

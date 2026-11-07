@@ -92,3 +92,34 @@ test("portada: sin carpeta de notas no se guarda nada", async () => {
   await ui.run("saveCover({ arrayBuffer: async () => new ArrayBuffer(1) })");
   assert.deepEqual(Object.keys(ui.files), []);
 });
+
+test("deshacer al eliminar: el subrayado vuelve en su orden y se guarda", async () => {
+  const ui = loadUI();
+  const saved = [];
+  ui.handle("notes_section", ({ clips }) => saved.push(clips.map((c) => c.id)));
+  ui.handle("notes_summary", () => {});
+  ui.run(`book = ${JSON.stringify({ ...bookFrom("a b c d e f"), note_name: "Libro" })}`);
+  ui.run(`notesDir = "/Vault"; path = "/Libro.epub"; renderPage = () => {}; refreshParagraphs = () => {}`);
+  ui.run(`gone = { id: "h2", start: 2, end: 3 };
+          highlights = [{ id: "h1", start: 0, end: 0 }, { id: "h3", start: 4, end: 5 }]`);
+  await ui.run(`restoreHighlight(gone, "/Libro.epub")`);
+  assert.deepEqual(ui.get("highlights.map((h) => h.id)"), ["h1", "h2", "h3"]);
+  assert.deepEqual(saved, [["h1", "h2", "h3"]]);
+  await ui.run(`restoreHighlight(gone, "/Libro.epub")`); // ya está: no se duplica
+  await ui.run(`restoreHighlight({ id: "h9", start: 1, end: 1 }, "/Otro.epub")`); // otro libro: nada
+  assert.equal(ui.run("highlights.length"), 3);
+  assert.equal(saved.length, 1);
+});
+
+test("avisos: ⌘Z solo deshace mientras se ve su aviso", () => {
+  const ui = loadUI();
+  const first = ui.run(`notify("Subrayado eliminado", { undo: () => {} })`);
+  assert.equal(ui.run("typeof toastUndo"), "function");
+  ui.run(`notify("Guardado en Libro.md")`); // otro aviso lo reemplaza: ya no hay qué deshacer
+  assert.equal(ui.run("toastUndo"), null);
+  ui.run(`notify("Subrayado eliminado", { undo: () => {} })`);
+  ui.run(`hideToast(${first})`); // cerrar un aviso viejo no cierra el actual
+  assert.equal(ui.run("typeof toastUndo"), "function");
+  ui.run("hideToast()");
+  assert.equal(ui.run("toastUndo"), null);
+});

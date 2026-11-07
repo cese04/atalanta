@@ -1,52 +1,53 @@
 /* ── Temas de color ──
-   Cada tema define solo 6 colores:
+   Cada tema define solo 7 colores:
    --bg fondo · --fg texto · --muted texto secundario · --rule líneas finas
    --bar barras de la gráfica · --accent letra ancla y capítulo actual
-   Para que todo se lea bien, --fg y --muted contrastan al menos 4.5:1 con --bg (WCAG AA) y
+   --error avisos de error: el rojo de la paleta de cada tema
+   Para que todo se lea bien, --fg, --muted y --error contrastan al menos 4.5:1 con --bg (WCAG AA) y
    --accent al menos 3:1. Por eso algunos se apartan un poco de su paleta original (los grises de
    Solarized, Catppuccin, Gruvbox, Nord y Dracula; en Solarized claro también el texto). */
 
 [data-theme="tufte"] {
-  --bg: #fffff8; --fg: #111111; --muted: #75756e; --rule: #d9d9cf; --bar: #c4c4b8; --accent: #a00000;
+  --bg: #fffff8; --fg: #111111; --muted: #75756e; --rule: #d9d9cf; --bar: #c4c4b8; --accent: #a00000; --error: #a00000;
 }
 /* Modo oscuro de tufte-css, con un rojo más claro para que el acento contraste. */
 [data-theme="tufte-dark"] {
   --mark-alpha: 30%;
-  --bg: #151515; --fg: #dddddd; --muted: #8f8f88; --rule: #333333; --bar: #3d3d3a; --accent: #e06c6c;
+  --bg: #151515; --fg: #dddddd; --muted: #8f8f88; --rule: #333333; --bar: #3d3d3a; --accent: #e06c6c; --error: #e06c6c;
   color-scheme: dark;
 }
 [data-theme="solarized-light"] {
-  --bg: #fdf6e3; --fg: #385861; --muted: #5e7379; --rule: #eee8d5; --bar: #d6cfb8; --accent: #dc322f;
+  --bg: #fdf6e3; --fg: #385861; --muted: #5e7379; --rule: #eee8d5; --bar: #d6cfb8; --accent: #dc322f; --error: #d3302d;
 }
 [data-theme="solarized-dark"] {
   --mark-alpha: 30%;
-  --bg: #002b36; --fg: #93a1a1; --muted: #819294; --rule: #073642; --bar: #1c4c58; --accent: #dc322f;
+  --bg: #002b36; --fg: #93a1a1; --muted: #819294; --rule: #073642; --bar: #1c4c58; --accent: #dc322f; --error: #e56765;
   color-scheme: dark;
 }
 [data-theme="latte"] {
-  --bg: #eff1f5; --fg: #4c4f69; --muted: #686b82; --rule: #ccd0da; --bar: #bcc0cc; --accent: #d20f39;
+  --bg: #eff1f5; --fg: #4c4f69; --muted: #686b82; --rule: #ccd0da; --bar: #bcc0cc; --accent: #d20f39; --error: #d20f39;
 }
 [data-theme="mocha"] {
   --mark-alpha: 30%;
-  --bg: #1e1e2e; --fg: #cdd6f4; --muted: #8287a0; --rule: #313244; --bar: #45475a; --accent: #f38ba8;
+  --bg: #1e1e2e; --fg: #cdd6f4; --muted: #8287a0; --rule: #313244; --bar: #45475a; --accent: #f38ba8; --error: #f38ba8;
   color-scheme: dark;
 }
 [data-theme="gruvbox"] {
   --mark-alpha: 30%;
-  --bg: #282828; --fg: #ebdbb2; --muted: #9d8e7b; --rule: #3c3836; --bar: #504945; --accent: #fb4934;
+  --bg: #282828; --fg: #ebdbb2; --muted: #9d8e7b; --rule: #3c3836; --bar: #504945; --accent: #fb4934; --error: #fb5844;
   color-scheme: dark;
 }
 [data-theme="nord-light"] {
-  --bg: #eceff4; --fg: #2e3440; --muted: #4c566a; --rule: #d8dee9; --bar: #c5ccd8; --accent: #5e81ac;
+  --bg: #eceff4; --fg: #2e3440; --muted: #4c566a; --rule: #d8dee9; --bar: #c5ccd8; --accent: #5e81ac; --error: #a2525a;
 }
 [data-theme="nord"] {
   --mark-alpha: 30%;
-  --bg: #2e3440; --fg: #d8dee9; --muted: #939eb4; --rule: #3b4252; --bar: #4c566a; --accent: #88c0d0;
+  --bg: #2e3440; --fg: #d8dee9; --muted: #939eb4; --rule: #3b4252; --bar: #4c566a; --accent: #88c0d0; --error: #d08c92;
   color-scheme: dark;
 }
 [data-theme="dracula"] {
   --mark-alpha: 30%;
-  --bg: #282a36; --fg: #f8f8f2; --muted: #8692b7; --rule: #44475a; --bar: #4f5370; --accent: #ff79c6;
+  --bg: #282a36; --fg: #f8f8f2; --muted: #8692b7; --rule: #44475a; --bar: #4f5370; --accent: #ff79c6; --error: #ff5858;
   color-scheme: dark;
 }
 
@@ -54,11 +55,11 @@
    En el claro, el verde es un poco más oscuro que el original (#519d5c) para leerse bien en texto
    pequeño, como el capítulo actual del índice (contraste 4.8:1 en vez de 3.1:1). */
 [data-theme="typewriter-light"] {
-  --bg: #fcf5e4; --fg: #262626; --muted: #595959; --rule: #e6e6e6; --bar: #e4dcc8; --accent: #3f7947;
+  --bg: #fcf5e4; --fg: #262626; --muted: #595959; --rule: #e6e6e6; --bar: #e4dcc8; --accent: #3f7947; --error: #b3412f;
 }
 [data-theme="typewriter-dark"] {
   --mark-alpha: 30%;
-  --bg: #262626; --fg: #c5b8a1; --muted: #999999; --rule: #333333; --bar: #3a342e; --accent: #519d5c;
+  --bg: #262626; --fg: #c5b8a1; --muted: #999999; --rule: #333333; --bar: #3a342e; --accent: #519d5c; --error: #d9705f;
   color-scheme: dark;
 }
 
@@ -332,8 +333,14 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 }
 
 /* Progreso del capítulo: separa el texto de los controles. La parte leída, en el color de acento. */
-#chapterBar { height: 0.1875rem; background: var(--rule); }
+#chapterBar { height: 0.1875rem; background: var(--rule); overflow: hidden; }
 #chapterFill { width: 0; height: 100%; background: var(--accent); }
+/* Abriendo un libro (setLoading en app.js): un tramo que recorre la línea sin parar. */
+#chapterBar.loading #chapterFill { animation: loading 1.2s ease-in-out infinite; }
+@keyframes loading {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(340%); }
+}
 #controls { display: flex; align-items: center; gap: 0.875rem; font-size: 0.875rem; }
 #play { min-width: 4em; color: var(--fg); }
 #wpmLabel { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5em; }
@@ -475,25 +482,44 @@ main.highlighting #modeHint { opacity: 1; }
 #helpButton { margin-left: auto; font-size: 0.8125rem; }
 #status { width: 80%; }
 
+/* Avisos: una ficha centrada al pie del texto, justo sobre la línea del capítulo. Los errores
+   llevan "Error:" y el borde en el rojo del tema, y se quedan hasta cerrarlos.
+   visibility (además de opacity) evita que Tab llegue a sus botones mientras está oculto. */
 #toast {
-  position: fixed;
-  right: 1.25rem;
-  bottom: 1rem;
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--muted);
+  position: absolute;
+  left: 50%;
+  bottom: 0.75rem;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  max-width: min(36rem, 90%);
+  padding: 0.5rem 0.875rem;
+  transform: translateX(-50%);
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--rule);
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
   opacity: 0;
-  transition: opacity 0.4s;
-  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
 }
-#toast.show { opacity: 1; }
+#toast.show { opacity: 1; visibility: visible; }
+#toast.error { border-color: var(--error); }
+#toast strong { color: var(--error); font-weight: 600; }
+#toastAction { color: var(--accent); white-space: nowrap; }
+#toastClose { white-space: nowrap; }
+main.highlighting #toast { bottom: 2.5rem; } /* encima del aviso del modo subrayado */
 
 #open { font-size: 0.9375rem; }
 
 /* ── Movimiento reducido (Ajustes del Sistema › Accesibilidad › Pantalla) ──
    Sin parpadeo al empezar un párrafo: la pausa se mantiene, pero la palabra no destella.
-   El vuelo de la palabra al pausar también se omite (ver switchView en app.js). Los
+   Al abrir un libro, la línea del capítulo queda fija en vez de moverse. El vuelo de la
+   palabra al pausar también se omite (ver switchView en app.js). Los
    desvanecidos se quedan: cambian la opacidad, no mueven nada. */
 @media (prefers-reduced-motion: reduce) {
   #reader.blink #word { opacity: 1; }
+  #chapterBar.loading #chapterFill { animation: none; width: 100% !important; opacity: 0.4; } /* cargando: la línea entera, tenue */
 }

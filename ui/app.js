@@ -50,18 +50,29 @@ async function openBook(p) {
   stopTimer();
   await saveReading(); // progreso del libro que se deja, si se estaba leyendo
   setHighlighting(false);
+  const name = p.split(/[\\/]/).pop();
   $("msg").textContent = "Cargando…";
+  const loading = notify(`Abriendo ${name}…`, { duration: 0 }); // se ve también en pausa
+  setLoading(true);
+  const pages = (n, total) => {
+    $("msg").textContent = `Leyendo el PDF… página ${n} de ${total}`;
+    setLoading(n / total);
+  };
   try {
     book = p.toLowerCase().endsWith(".pdf")
-      ? await openPdf(p, (n, total) => ($("msg").textContent = `Leyendo el PDF… página ${n} de ${total}`)) // ver pdf-reader.js
+      ? await openPdf(p, pages) // ver pdf-reader.js
       : await invoke("open_book", { path: p });
   } catch (e) {
+    setLoading(false);
     $("msg").textContent = "No se pudo abrir el libro: " + e;
+    notify(`No se pudo abrir ${name}: ${e}`, { error: true });
     setPaused(false); // muestra el mensaje
     localStorage.removeItem("last");
     removeRecent(p);
     return;
   }
+  setLoading(false);
+  hideToast(loading);
   path = p;
   localStorage.setItem("last", p);
   $("msg").textContent = "";
@@ -776,12 +787,56 @@ function toggleHelp(visible = $("help").hidden) {
   $("help").hidden = !visible;
 }
 
-// Mensaje breve abajo a la derecha (p. ej. "Guardado en Libro.md").
-function notify(text) {
-  $("toast").textContent = text;
-  $("toast").classList.add("show");
+// ── Avisos ──
+// Una ficha centrada sobre los controles (p. ej. "Guardado en Libro.md"). Opciones:
+//   error: true            "Error:" en el rojo del tema; se queda hasta cerrarlo
+//   undo: función          botón Deshacer (también ⌘Z o U); el aviso dura 6 s
+//   action: { label, run } otro botón, p. ej. el que arregla un error
+//   duration: ms           cuánto se ve; 0 = hasta que otro aviso lo reemplace
+// Devuelve un número para cerrar justo ese aviso con hideToast (si no lo reemplazó otro).
+let toastUndo = null; // lo que deshace el aviso visible, si tiene Deshacer
+function notify(text, { error = false, undo = null, action = null, duration = error ? 0 : undo ? 6000 : 3500 } = {}) {
   clearTimeout(notify.timer);
-  notify.timer = setTimeout(() => $("toast").classList.remove("show"), 3500);
+  const id = (notify.id = (notify.id || 0) + 1);
+  const label = document.createElement("strong");
+  label.textContent = "Error: ";
+  $("toastText").setAttribute("aria-live", error ? "assertive" : "polite");
+  $("toastText").replaceChildren(...(error ? [label] : []), text);
+  $("toast").classList.toggle("error", error);
+  toastUndo = undo;
+  const button = undo ? { label: "Deshacer", run: undo } : action;
+  $("toastAction").hidden = !button;
+  if (button) {
+    $("toastAction").textContent = button.label;
+    $("toastAction").onclick = () => {
+      hideToast();
+      button.run();
+    };
+  }
+  $("toastClose").hidden = !error;
+  $("toast").classList.add("show");
+  if (duration) notify.timer = setTimeout(() => hideToast(id), duration);
+  return id;
+}
+
+// Primero se cierra el aviso: lo que se deshace puede mostrar el suyo ("Guardado en…").
+function undoFromToast() {
+  const undo = toastUndo;
+  hideToast();
+  undo();
+}
+
+function hideToast(id = notify.id) {
+  if (id !== notify.id) return; // ya lo reemplazó otro aviso
+  $("toast").classList.remove("show");
+  toastUndo = null;
+}
+
+// Abriendo un libro, en la línea del capítulo: true = un tramo que la recorre sin parar,
+// un número de 0 a 1 = esa parte (páginas leídas de un PDF), false = terminó.
+function setLoading(state) {
+  $("chapterBar").classList.toggle("loading", state === true);
+  $("chapterFill").style.width = state === true ? "30%" : state === false ? "0" : state * 100 + "%";
 }
 
 // ── Controles y teclado ──
@@ -794,6 +849,7 @@ $("wpm").oninput = () => setWpm(Number($("wpm").value));
 $("progress").oninput = () => book && goTo(Number($("progress").value));
 $("helpButton").onclick = () => toggleHelp();
 $("help").onclick = () => toggleHelp(false);
+$("toastClose").onclick = () => hideToast();
 
 document.addEventListener("keydown", (e) => {
   // Mientras se escribe una nota, el teclado no controla la lectura.
@@ -801,6 +857,10 @@ document.addEventListener("keydown", (e) => {
   // ⌘+ ⌘− ⌘0: tamaño de letra. Están en el menú, pero aquí se reconocen por el carácter
   // (en un teclado en español "+" tiene tecla propia y "=" no coincide). Los demás ⌘ son del menú.
   if (e.metaKey || e.ctrlKey) {
+    if (e.key.toLowerCase() === "z" && !e.shiftKey && toastUndo) {
+      undoFromToast(); // deshace lo del aviso (p. ej. un subrayado eliminado); si no, es el Deshacer del menú
+      return e.preventDefault();
+    }
     const size = { "+": 1, "=": 1, "-": -1, "0": 0 }[e.key];
     if (size !== undefined) {
       changeFontSize(size);
@@ -813,6 +873,7 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "Escape") {
     toggleHelp(false);
     setHighlighting(false);
+    hideToast();
   } else if (!book) return;
   else if (e.code === "Space") toggle();
   else if (e.key === "ArrowLeft") goTo(pos - 10);
@@ -822,6 +883,7 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "[") jumpChapter(-1);
   else if (e.key === "]") jumpChapter(1);
   else if (e.key === "s" || e.key === "S") highlightKey();
+  else if ((e.key === "u" || e.key === "U") && toastUndo) undoFromToast();
   else return;
   e.preventDefault();
   // Con un botón enfocado, Espacio también lo pulsaría al soltar la tecla. Las flechas ya no
