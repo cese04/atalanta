@@ -48,20 +48,29 @@
     <!-- Progreso del capítulo actual: una línea entre el texto y los controles -->
     <div id="chapterBar"><div id="chapterFill"></div></div>
 
-    <!-- Controles, compartidos por ambas vistas -->
+    <!-- Barra inferior, compartida por ambas vistas. Arriba, dónde vas: capítulo y libro, y la
+         barra del libro con una marca por capítulo (renderTicks en app.js). Abajo, los controles. -->
     <div id="bar">
-      <div id="controls">
-        <button id="back" title="Retroceder 10 palabras (←)" aria-label="Retroceder 10 palabras">−10</button>
-        <button id="play" title="Leer / pausar (espacio)">Leer</button>
-        <button id="fwd" title="Avanzar 10 palabras (→)" aria-label="Avanzar 10 palabras">+10</button>
-        <input id="wpm" type="range" min="100" max="1000" step="25" title="Velocidad (↑ ↓)" aria-label="Velocidad">
-        <span id="wpmLabel"></span>
+      <div id="where">
+        <p id="status">
+          <span id="chapterStatus" hidden><span class="label">Capítulo</span> <span id="chapterValue"></span></span>
+          <span id="bookStatus" hidden><span class="label">Libro</span> <span id="bookValue"></span></span>
+        </p>
+        <div id="bookBar">
+          <div id="ticks"></div>
+          <input id="progress" type="range" min="0" max="0" value="0" aria-label="Posición en el libro">
+        </div>
       </div>
-      <input id="progress" type="range" min="0" max="0" value="0" aria-label="Posición en el libro">
-      <p id="status">
-        <span id="chapterStatus"></span><span id="bookStatus"></span>
+      <div id="controls">
+        <div id="playback">
+          <button id="back" title="Retroceder 10 palabras (←)" aria-label="Retroceder 10 palabras">−10</button>
+          <button id="play" title="Leer / pausar (espacio)">Leer</button>
+          <button id="fwd" title="Avanzar 10 palabras (→)" aria-label="Avanzar 10 palabras">+10</button>
+          <input id="wpm" type="range" min="100" max="1000" step="25" title="Velocidad (↑ ↓)" aria-label="Velocidad">
+          <span id="wpmLabel"></span>
+        </div>
         <button id="helpButton" title="Atajos de teclado (?)">Atajos <kbd>?</kbd></button>
-      </p>
+      </div>
     </div>
   </main>
 
@@ -92,10 +101,10 @@
   <dialog id="noteDialog">
     <form method="dialog">
       <p id="noteChapter"></p>
-      <label>Texto subrayado <textarea id="noteText" rows="6"></textarea></label>
-      <label>Comentario <textarea id="noteComment" rows="3" placeholder="Opcional"></textarea></label>
+      <label><span class="label">Texto subrayado</span> <textarea id="noteText" rows="6"></textarea></label>
+      <label><span class="label">Comentario</span> <textarea id="noteComment" rows="3" placeholder="Opcional"></textarea></label>
       <div id="noteColors" class="colors">
-        Color
+        <span class="label">Color</span>
         <label title="Amarillo"><input type="radio" name="color" value="amarillo" aria-label="Amarillo"><span data-color="amarillo"></span></label>
         <label title="Verde"><input type="radio" name="color" value="verde" aria-label="Verde"><span data-color="verde"></span></label>
         <label title="Azul"><input type="radio" name="color" value="azul" aria-label="Azul"><span data-color="azul"></span></label>

@@ -126,3 +126,27 @@ test("tipo de letra: el menú agrupa las fuentes con un encabezado por grupo", (
   ]);
   assert.equal(items.find((i) => i.checked).text, "Según el tema (ET Book)"); // marcado por defecto
 });
+
+test("marcas de capítulo: principales siempre, subcapítulos solo del capítulo actual", () => {
+  const ui = loadUI();
+  const toc = [
+    { title: "Uno", level: 0, word: 0 },
+    { title: "1.1", level: 1, word: 20 },
+    { title: "Dos", level: 0, word: 50 },
+    { title: "2.1", level: 1, word: 70 },
+    { title: "2.2", level: 1, word: 90 },
+  ];
+  const ticks = (pos, gap = 0) => ui.get(`tickPositions(${JSON.stringify(toc)}, 101, ${pos}, ${gap})`);
+  // En "Uno": la marca de "Dos" y la corta de 1.1. El principio del libro no lleva marca.
+  assert.deepEqual(ticks(10), [{ at: 0.5, sub: false }, { at: 0.2, sub: true }]);
+  // En "Dos": sus subcapítulos, no los de "Uno".
+  assert.deepEqual(ticks(60), [{ at: 0.5, sub: false }, { at: 0.7, sub: true }, { at: 0.9, sub: true }]);
+  // Marcas demasiado juntas: se omite la que queda a menos del mínimo de la anterior.
+  assert.deepEqual(ticks(60, 0.25), [{ at: 0.5, sub: false }, { at: 0.7, sub: true }]);
+});
+
+test("marcas de capítulo: si todo está en un nivel más profundo, ese cuenta como principal", () => {
+  const ui = loadUI();
+  const toc = [{ title: "A", level: 1, word: 0 }, { title: "B", level: 1, word: 40 }];
+  assert.deepEqual(ui.get(`tickPositions(${JSON.stringify(toc)}, 81, 0, 0)`), [{ at: 0.5, sub: false }]);
+});

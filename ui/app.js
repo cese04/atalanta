@@ -184,6 +184,7 @@ function renderToc() {
   $("info").textContent = `${formatMinutes(book.words.length / wpm)} de lectura a ${wpm} palabras/min`;
   currentLi = null;
   setTocStop($("toc").firstElementChild);
+  renderTicks();
 }
 
 // El índice es una sola parada de Tab: solo un capítulo tiene tabIndex 0 (el actual, o el
@@ -443,12 +444,14 @@ function show() {
   const total = book.words.length;
   $("progress").value = pos;
   $("progress").setAttribute("aria-valuetext", `${percent(pos, total)} del libro`);
-  $("bookStatus").textContent = `Libro ${percent(pos, total)} · quedan ${formatMinutes((total - pos) / wpm)}`;
+  $("bookStatus").hidden = false;
+  $("bookValue").textContent = `${percent(pos, total)} · quedan ${formatMinutes((total - pos) / wpm)}`;
   const c = chapterAt(pos);
   $("head").textContent = c < 0 ? "" : book.toc[c].title;
   const chapterLeft = c < 0 ? 0 : book.toc[c].word + lengths[c] - pos;
-  $("chapterStatus").textContent =
-    c < 0 ? "" : `Capítulo ${percent(pos - book.toc[c].word, lengths[c])} · quedan ${formatMinutes(chapterLeft / wpm)}`;
+  $("chapterStatus").hidden = c < 0;
+  $("chapterValue").textContent =
+    c < 0 ? "" : `${percent(pos - book.toc[c].word, lengths[c])} · quedan ${formatMinutes(chapterLeft / wpm)}`;
   $("chapterFill").style.width = 100 * chapterProgress(c) + "%";
 
   highlightChapter(c);
@@ -488,7 +491,52 @@ function highlightChapter(index) {
   li?.scrollIntoView({ block: "nearest" });
   if (li && !$("toc").contains(document.activeElement)) setTocStop(li); // Tab entra por el capítulo actual
   currentLi = li;
+  renderTicks(); // las marcas de los subcapítulos siguen al capítulo actual
 }
+
+// ── Marcas de capítulo en la barra del libro ──
+
+// Dónde van las marcas (0 a 1 del libro): una por capítulo principal y, solo dentro del
+// capítulo actual, una corta (`sub`) por subcapítulo. Se omiten las que quedarían a menos de
+// `minGap` (en fracción del ancho) de la anterior, para que un libro con muchos capítulos no
+// se llene de rayas. El principio del libro no lleva marca.
+function tickPositions(toc, total, pos, minGap) {
+  if (total < 2) return [];
+  const sorted = [...toc].sort((a, b) => a.word - b.word);
+  const top = Math.min(...sorted.map((ch) => ch.level)); // nivel de los capítulos principales
+  const mains = sorted.filter((ch) => ch.level === top);
+  const current = mains.filter((ch) => ch.word <= pos).pop();
+  const end = current ? mains.find((ch) => ch.word > current.word)?.word ?? total : 0;
+  const subs = current ? sorted.filter((ch) => ch.level > top && ch.word > current.word && ch.word < end) : [];
+  const ticks = [];
+  for (const [list, sub] of [[mains, false], [subs, true]]) {
+    let last = 0;
+    for (const ch of list) {
+      const at = ch.word / (total - 1);
+      if (at <= 0 || at - last < minGap) continue;
+      ticks.push({ at, sub });
+      last = at;
+    }
+  }
+  return ticks;
+}
+
+// Dibuja las marcas detrás del deslizador del libro. El centro del punto del deslizador no
+// llega a los bordes (se queda a medio punto, 0.28125rem), así que las marcas tampoco.
+function renderTicks() {
+  if (!book) return;
+  const width = Number($("bookBar").clientWidth) || 1;
+  const ticks = tickPositions(book.toc, book.words.length, pos, 4 / width); // al menos 4 px entre marcas
+  $("ticks").replaceChildren(
+    ...ticks.map(({ at, sub }) => {
+      const tick = document.createElement("div");
+      tick.className = sub ? "tick sub" : "tick";
+      tick.style.left = `calc(0.28125rem + (100% - 0.5625rem) * ${at})`;
+      return tick;
+    })
+  );
+}
+window.addEventListener("resize", renderTicks); // con otro ancho caben más o menos marcas
 
 // ── Leer / pausar ──
 

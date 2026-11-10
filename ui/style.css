@@ -1,53 +1,54 @@
 /* ── Temas de color ──
-   Cada tema define solo 7 colores:
-   --bg fondo · --fg texto · --muted texto secundario · --rule líneas finas
+   Cada tema define solo 8 colores:
+   --bg fondo · --fg texto · --muted texto secundario · --rule separadores (adorno, tenues)
+   --track líneas de los controles: deslizadores, línea del capítulo y sus marcas
    --bar barras de la gráfica · --accent letra ancla y capítulo actual
    --error avisos de error: el rojo de la paleta de cada tema
    Para que todo se lea bien, --fg, --muted y --error contrastan al menos 4.5:1 con --bg (WCAG AA) y
-   --accent al menos 3:1. Por eso algunos se apartan un poco de su paleta original (los grises de
+   --accent y --track al menos 3:1. Por eso algunos se apartan un poco de su paleta original (los grises de
    Solarized, Catppuccin, Gruvbox, Nord y Dracula; en Solarized claro también el texto). */
 
 [data-theme="tufte"] {
-  --bg: #fffff8; --fg: #111111; --muted: #75756e; --rule: #d9d9cf; --bar: #c4c4b8; --accent: #a00000; --error: #a00000;
+  --bg: #fffff8; --fg: #111111; --muted: #75756e; --rule: #d9d9cf; --track: #93938c; --bar: #c4c4b8; --accent: #a00000; --error: #a00000;
 }
 /* Modo oscuro de tufte-css, con un rojo más claro para que el acento contraste. */
 [data-theme="tufte-dark"] {
   --mark-alpha: 30%;
-  --bg: #151515; --fg: #dddddd; --muted: #8f8f88; --rule: #333333; --bar: #3d3d3a; --accent: #e06c6c; --error: #e06c6c;
+  --bg: #151515; --fg: #dddddd; --muted: #8f8f88; --rule: #333333; --track: #646464; --bar: #3d3d3a; --accent: #e06c6c; --error: #e06c6c;
   color-scheme: dark;
 }
 [data-theme="solarized-light"] {
-  --bg: #fdf6e3; --fg: #385861; --muted: #5e7379; --rule: #eee8d5; --bar: #d6cfb8; --accent: #dc322f; --error: #d3302d;
+  --bg: #fdf6e3; --fg: #385861; --muted: #5e7379; --rule: #eee8d5; --track: #7f908e; --bar: #d6cfb8; --accent: #dc322f; --error: #d3302d;
 }
 [data-theme="solarized-dark"] {
   --mark-alpha: 30%;
-  --bg: #002b36; --fg: #93a1a1; --muted: #819294; --rule: #073642; --bar: #1c4c58; --accent: #dc322f; --error: #e56765;
+  --bg: #002b36; --fg: #93a1a1; --muted: #819294; --rule: #073642; --track: #5b767b; --bar: #1c4c58; --accent: #dc322f; --error: #e56765;
   color-scheme: dark;
 }
 [data-theme="latte"] {
-  --bg: #eff1f5; --fg: #4c4f69; --muted: #686b82; --rule: #ccd0da; --bar: #bcc0cc; --accent: #d20f39; --error: #d20f39;
+  --bg: #eff1f5; --fg: #4c4f69; --muted: #686b82; --rule: #ccd0da; --track: #86899c; --bar: #bcc0cc; --accent: #d20f39; --error: #d20f39;
 }
 [data-theme="mocha"] {
   --mark-alpha: 30%;
-  --bg: #1e1e2e; --fg: #cdd6f4; --muted: #8287a0; --rule: #313244; --bar: #45475a; --accent: #f38ba8; --error: #f38ba8;
+  --bg: #1e1e2e; --fg: #cdd6f4; --muted: #8287a0; --rule: #313244; --track: #666a80; --bar: #45475a; --accent: #f38ba8; --error: #f38ba8;
   color-scheme: dark;
 }
 [data-theme="gruvbox"] {
   --mark-alpha: 30%;
-  --bg: #282828; --fg: #ebdbb2; --muted: #9d8e7b; --rule: #3c3836; --bar: #504945; --accent: #fb4934; --error: #fb5844;
+  --bg: #282828; --fg: #ebdbb2; --muted: #9d8e7b; --rule: #3c3836; --track: #797161; --bar: #504945; --accent: #fb4934; --error: #fb5844;
   color-scheme: dark;
 }
 [data-theme="nord-light"] {
-  --bg: #eceff4; --fg: #2e3440; --muted: #4c566a; --rule: #d8dee9; --bar: #c5ccd8; --accent: #5e81ac; --error: #a2525a;
+  --bg: #eceff4; --fg: #2e3440; --muted: #4c566a; --rule: #d8dee9; --track: #838994; --bar: #c5ccd8; --accent: #5e81ac; --error: #a2525a;
 }
 [data-theme="nord"] {
   --mark-alpha: 30%;
-  --bg: #2e3440; --fg: #d8dee9; --muted: #939eb4; --rule: #3b4252; --bar: #4c566a; --accent: #88c0d0; --error: #d08c92;
+  --bg: #2e3440; --fg: #d8dee9; --muted: #939eb4; --rule: #3b4252; --track: #787f8d; --bar: #4c566a; --accent: #88c0d0; --error: #d08c92;
   color-scheme: dark;
 }
 [data-theme="dracula"] {
   --mark-alpha: 30%;
-  --bg: #282a36; --fg: #f8f8f2; --muted: #8692b7; --rule: #44475a; --bar: #4f5370; --accent: #ff79c6; --error: #ff5858;
+  --bg: #282a36; --fg: #f8f8f2; --muted: #8692b7; --rule: #44475a; --track: #737582; --bar: #4f5370; --accent: #ff79c6; --error: #ff5858;
   color-scheme: dark;
 }
 
@@ -55,11 +56,11 @@
    En el claro, el verde es un poco más oscuro que el original (#519d5c) para leerse bien en texto
    pequeño, como el capítulo actual del índice (contraste 4.8:1 en vez de 3.1:1). */
 [data-theme="typewriter-light"] {
-  --bg: #fcf5e4; --fg: #262626; --muted: #595959; --rule: #e6e6e6; --bar: #e4dcc8; --accent: #3f7947; --error: #b3412f;
+  --bg: #fcf5e4; --fg: #262626; --muted: #595959; --rule: #e6e6e6; --track: #8c8c8c; --bar: #e4dcc8; --accent: #3f7947; --error: #b3412f;
 }
 [data-theme="typewriter-dark"] {
   --mark-alpha: 30%;
-  --bg: #262626; --fg: #c5b8a1; --muted: #999999; --rule: #333333; --bar: #3a342e; --accent: #519d5c; --error: #d9705f;
+  --bg: #262626; --fg: #c5b8a1; --muted: #999999; --rule: #333333; --track: #767066; --bar: #3a342e; --accent: #519d5c; --error: #d9705f;
   color-scheme: dark;
 }
 
@@ -87,6 +88,28 @@ html { --font-text: "Iowan Old Style", Palatino, Georgia, serif; }              
 [data-font="atkinson"] { --font-text: "Atkinson Hyperlegible", -apple-system, sans-serif; }
 [data-font="quattro"] { --font-text: "iA Writer Quattro", -apple-system, sans-serif; }
 
+/* ── Escalas ──
+   Letra: razón 1.25 a partir del texto de la interfaz (15 px), de --text-sm a --text-5xl.
+   Espacios: múltiplos de 4 px (0.25rem). La interfaz usa solo estos valores; el texto del libro
+   en pausa usa em (relativos a su propio tamaño), como en un libro impreso. */
+html {
+  --text-sm: 0.75rem;     /* 12 px: datos, etiquetas, atajos */
+  --text-base: 0.9375rem; /* 15 px: interfaz */
+  --text-lg: 1.1719rem;   /* 18.75 px: títulos del panel y del capítulo, texto en pausa */
+  --text-xl: 1.4648rem;
+  --text-2xl: 1.8311rem;
+  --text-3xl: 2.2888rem;  /* tarjeta de capítulo */
+  --text-4xl: 2.861rem;
+  --text-5xl: 3.5763rem;  /* la palabra */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem;
+  --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem;
+}
+
+/* Etiquetas (Capítulo, Libro, secciones de la ayuda, campos del editor): versalitas espaciadas,
+   como los pies de foto de un libro. Algo más grandes que su texto (1.125em), para que la
+   versalita no quede más pequeña que la minúscula de al lado, sin pesar más que el dato. */
+.label, #help th { font-size: 1.125em; font-variant-caps: all-small-caps; letter-spacing: 0.04em; }
+
 /* ── Base ──
    Unidades: todo en rem (relativo al tamaño de letra base, 1rem = 16px), salvo
    - em: lo que depende de su propio texto (grosor y separación del subrayado);
@@ -101,13 +124,17 @@ body {
   display: flex;
   background: var(--bg);
   color: var(--fg);
-  font: 0.9375rem/1.4 var(--font-text);
+  font: var(--text-base)/1.4 var(--font-text);
   user-select: none;
 }
+/* Botones de texto sin adorno. Su área de clic es de al menos 24 px (WCAG 2.2): el relleno no
+   se ve, pero se puede acertar. */
 button {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
   background: none;
   border: none;
-  padding: 0.125rem 0.25rem;
+  padding: var(--space-1) var(--space-2);
   color: var(--muted);
   font: inherit;
   cursor: pointer;
@@ -118,10 +145,10 @@ button:hover { color: var(--fg); }
    Solo aparece con el teclado (:focus-visible), no al hacer clic. */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 kbd {
-  padding: 0 0.25rem;
+  padding: 0 var(--space-1);
   border: 1px solid var(--rule);
   border-radius: 0.1875rem;
-  font: 0.75rem -apple-system, system-ui, sans-serif;
+  font: var(--text-sm) -apple-system, system-ui, sans-serif;
   color: var(--muted);
 }
 
@@ -130,20 +157,20 @@ aside {
   width: 17.5rem;
   display: flex;
   flex-direction: column;
-  padding: 1.25rem 1.25rem 1rem;
+  padding: var(--space-5) var(--space-5) var(--space-4);
   border-right: 1px solid var(--rule);
 }
 .nosidebar aside { display: none; }
-h1 { font-size: 1.125rem; font-weight: normal; font-style: italic; margin: 0 0 0.125rem; }
-#info { color: var(--muted); font-size: 0.8125rem; margin: 0 0 1rem; }
+h1 { font-size: var(--text-lg); font-weight: normal; font-style: italic; margin: 0 0 var(--space-1); }
+#info { color: var(--muted); font-size: var(--text-sm); margin: 0 0 var(--space-4); }
 
 /* El relleno deja sitio al anillo de foco, que si no se recortaría en los bordes del índice. */
-#toc { flex: 1; overflow-y: auto; list-style: none; padding: 0.25rem; margin: 0 -0.25rem; font-size: 0.875rem; }
+#toc { flex: 1; overflow-y: auto; list-style: none; padding: var(--space-1); margin: 0 calc(-1 * var(--space-1)); font-size: var(--text-base); }
 #toc li {
   display: grid;
   grid-template-columns: 1fr auto;
-  column-gap: 0.5rem;
-  padding: 0.1875rem 0;
+  column-gap: var(--space-2);
+  padding: var(--space-1) 0;
   color: var(--muted);
   cursor: pointer;
 }
@@ -152,8 +179,8 @@ h1 { font-size: 1.125rem; font-weight: normal; font-style: italic; margin: 0 0 0
 
 /* Gráfica de tiempo por capítulo: una barra fina bajo cada título, con su etiqueta directa. */
 .time, .bar { display: none; }
-.chart .time { display: block; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--muted); }
-.chart .bar { display: block; grid-column: 1 / -1; height: 0.125rem; margin-top: 0.1875rem; background: var(--bar); }
+.chart .time { display: block; font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--muted); }
+.chart .bar { display: block; grid-column: 1 / -1; height: 0.125rem; margin-top: var(--space-1); background: var(--bar); }
 /* Dentro de cada barra, la parte ya leída del capítulo. */
 .fill { width: 0; height: 100%; background: var(--muted); }
 .chart li.current .fill { background: var(--accent); }
@@ -173,8 +200,8 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.75rem;
-  padding: 0 1.5rem;
+  gap: var(--space-8);
+  padding: 0 var(--space-6);
 }
 #msg { color: var(--muted); margin: 0; }
 #msg:empty { display: none; }
@@ -187,9 +214,9 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   z-index: 1;
   max-width: 60%;
   margin: 0;
-  padding: 0.875rem 1.5rem 0;
+  padding: var(--space-4) var(--space-6) 0;
   text-align: right;
-  font-size: 1.0625rem;
+  font-size: var(--text-lg);
   font-style: italic;
   color: var(--muted);
   white-space: nowrap;
@@ -210,7 +237,7 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   margin: 0;
   padding: 0 15%;
   text-align: center;
-  font-size: 2.125rem;
+  font-size: var(--text-3xl);
   font-style: italic;
   opacity: 0;
   pointer-events: none;
@@ -234,8 +261,8 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   width: 100%;
-  font-size: 3.5rem;
-  padding: 1.125rem 0;
+  font-size: var(--text-5xl);
+  padding: var(--space-5) 0;
 }
 #word::before, #word::after {
   content: "";
@@ -261,10 +288,10 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 
 /* Vista de pausa: el libro como texto corrido, en una columna de lectura cómoda. */
 #page {
-  top: 3rem; /* deja arriba la franja del encabezado del capítulo */
+  top: var(--space-12); /* deja arriba la franja del encabezado del capítulo */
   overflow-y: auto;
-  padding: 12vh max(2rem, calc(50% - 17em));
-  font-size: 1.1875rem;
+  padding: 12vh max(var(--space-8), calc(50% - 17em));
+  font-size: var(--text-lg);
   line-height: 1.6;
   user-select: text;          /* necesario para saber qué palabra se clicó */
   -webkit-user-select: text;
@@ -275,22 +302,23 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 /* Portada: al principio del texto y, pequeña, en el panel del índice (se oculta desde Ver). */
 #cover { margin: 0 0 3em; text-align: center; }
 #cover img { max-width: 100%; max-height: 70vh; width: auto; height: auto; }
-#coverThumb { display: block; width: 4.5rem; height: auto; margin-bottom: 0.875rem; }
+#coverThumb { display: block; width: 4.5rem; height: auto; margin-bottom: var(--space-3); }
 .nocover #coverThumb { display: none; }
 
 /* Formato del libro (ver paragraphClass en app.js): la estructura del libro con la
-   tipografía y los colores del tema. Títulos en cursiva y de tamaño según su nivel. */
-#page p.h1 { font-size: 1.6em; line-height: 1.3; font-style: italic; margin-bottom: 1em; }
-#page p.h2 { font-size: 1.35em; line-height: 1.3; font-style: italic; margin: 1.2em 0 0.8em; }
-#page p.h3 { font-size: 1.15em; font-style: italic; margin: 1em 0 0.6em; }
-#page p.quote { margin-left: 2em; margin-right: 2em; font-size: 0.95em; }
+   tipografía y los colores del tema. Títulos en cursiva y de tamaño según su nivel, en la
+   misma escala 1.25 (1.25² y 1.25 veces el texto; el tercer nivel, solo en cursiva). */
+#page p.h1 { font-size: 1.5625em; line-height: 1.3; font-style: italic; margin-bottom: 1em; }
+#page p.h2 { font-size: 1.25em; line-height: 1.3; font-style: italic; margin: 1.2em 0 0.8em; }
+#page p.h3 { font-style: italic; margin: 1em 0 0.6em; }
+#page p.quote { margin-left: 2em; margin-right: 2em; }
 
 /* Estilos del libro dentro del texto (solo en la pausa; en la lectura, la cursiva es el diálogo).
    Dentro de un título, que ya va en cursiva, la cursiva del libro se ve recta para seguir destacando. */
 #page .italic { font-style: italic; }
 #page .bold { font-weight: 600; }
-#page .larger { font-size: 1.15em; }
-#page .smaller { font-size: 0.85em; }
+#page .larger { font-size: 1.25em; }
+#page .smaller { font-size: 0.8em; }
 #page p.h1 .italic, #page p.h2 .italic, #page p.h3 .italic { font-style: normal; }
 
 /* Inicio de capítulo: una línea fina y espacio. */
@@ -323,17 +351,20 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   pointer-events: none;
 }
 
-/* ── Barra de controles ── */
+/* ── Barra inferior ──
+   Dos niveles: arriba, dónde vas (capítulo y libro, y la barra del libro con sus marcas), en
+   letra pequeña y tenue; abajo, los controles. Todo en la misma columna, al 80 % del ancho. */
 #bar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.875rem;
-  padding: 1rem 1.5rem 1.25rem;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6) var(--space-5);
 }
+#bar > * { width: 80%; }
 
 /* Progreso del capítulo: separa el texto de los controles. La parte leída, en el color de acento. */
-#chapterBar { height: 0.1875rem; background: var(--rule); overflow: hidden; }
+#chapterBar { height: 0.1875rem; background: var(--track); overflow: hidden; }
 #chapterFill { width: 0; height: 100%; background: var(--accent); }
 /* Abriendo un libro (setLoading en app.js): un tramo que recorre la línea sin parar. */
 #chapterBar.loading #chapterFill { animation: loading 1.2s ease-in-out infinite; }
@@ -341,15 +372,45 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   from { transform: translateX(-100%); }
   to { transform: translateX(340%); }
 }
-#controls { display: flex; align-items: center; gap: 0.875rem; font-size: 0.875rem; }
-#play { min-width: 4em; color: var(--fg); }
-#wpmLabel { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5em; }
-#progress { width: 80%; }
-#status { display: flex; gap: 1.75rem; color: var(--muted); font-size: 0.8125rem; margin: 0; font-variant-numeric: tabular-nums; }
 
-/* Deslizadores: una línea fina y un punto. */
-input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; height: 0.875rem; margin: 0; }
-input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--rule); }
+#where { display: flex; flex-direction: column; gap: var(--space-1); }
+#status {
+  display: flex;
+  gap: var(--space-6);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+#bookStatus { margin-left: auto; } /* a la derecha, aunque no haya capítulo */
+
+/* Barra del libro: el deslizador y, detrás, las marcas de capítulo (ver renderTicks en app.js):
+   una por capítulo principal y, más cortas, las de los subcapítulos del capítulo actual. */
+#bookBar { position: relative; }
+#progress { position: relative; display: block; width: 100%; }
+#ticks { position: absolute; inset: 0; pointer-events: none; }
+.tick {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 0.5rem;
+  transform: translate(-50%, -50%);
+  background: var(--track);
+}
+.tick.sub { height: 0.25rem; }
+
+/* Controles: retroceder, leer, avanzar y la velocidad al centro; los atajos a la derecha. */
+#controls { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+#playback { grid-column: 2; display: flex; align-items: center; gap: var(--space-2); }
+#play { min-width: 4em; color: var(--fg); }
+#wpm { margin-left: var(--space-4); }
+#wpmLabel { min-width: 4.5em; color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+#helpButton { justify-self: end; font-size: var(--text-sm); }
+
+/* Deslizadores: una línea fina y un punto. Miden 24 px de alto para acertarles con el ratón,
+   aunque la línea siga siendo de 1 px. */
+input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; height: 1.5rem; margin: 0; }
+input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--track); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 0.5625rem;
@@ -394,13 +455,13 @@ main.highlighting .hl:hover { outline: 1px solid var(--mark); }
 #modeHint {
   position: absolute;
   bottom: 0;
-  padding: 0.375rem 0;
+  padding: var(--space-2) 0;
   background: var(--bg);
   left: 0;
   right: 0;
   margin: 0;
   text-align: center;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--muted);
   pointer-events: none;
   opacity: 0;
@@ -411,40 +472,42 @@ main.highlighting #modeHint { opacity: 1; }
 /* Editor de un subrayado */
 #noteDialog {
   width: min(35rem, 90vw);
-  padding: 1.25rem 1.5rem;
+  padding: var(--space-5) var(--space-6);
   background: var(--bg);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 0.375rem;
 }
 #noteDialog::backdrop { background: color-mix(in srgb, var(--bg) 60%, transparent); }
-#noteChapter { margin: 0 0 0.875rem; font-style: italic; color: var(--muted); }
-#noteDialog label { display: block; margin-bottom: 0.875rem; font-size: 0.8125rem; color: var(--muted); }
+#noteChapter { margin: 0 0 var(--space-4); font-style: italic; color: var(--muted); }
+#noteDialog label { display: block; margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
 #noteDialog textarea {
   display: block;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 0.25rem;
-  padding: 0.5rem;
+  margin-top: var(--space-1);
+  padding: var(--space-2);
   background: transparent;
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 0.25rem;
   font-family: inherit;
-  font-size: 0.9375rem;
+  font-size: var(--text-base);
   line-height: 1.5;
   resize: vertical;
   user-select: text;
   -webkit-user-select: text;
 }
 #noteDialog textarea:focus { outline: none; border-color: var(--accent); }
-#noteDialog .actions { display: flex; align-items: center; gap: 0.75rem; }
+#noteDialog .actions { display: flex; align-items: center; gap: var(--space-3); }
 
 /* Selector de color: círculos; el elegido lleva un anillo. */
-.colors { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.875rem; font-size: 0.8125rem; color: var(--muted); }
-#noteDialog .colors label { margin: 0; }
+.colors { display: flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
+/* Cada círculo dentro de un área de clic de 24 px. */
+#noteDialog .colors label { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; margin: 0; }
+.colors .label { margin-right: var(--space-2); }
 .colors input { position: absolute; opacity: 0; pointer-events: none; }
-.colors span {
+.colors label span {
   display: block;
   width: 1.125rem;
   height: 1.125rem;
@@ -468,19 +531,16 @@ main.highlighting #modeHint { opacity: 1; }
   justify-content: center;
   background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
-#help table { border-collapse: collapse; font-size: 0.875rem; }
+#help table { border-collapse: collapse; font-size: var(--text-base); }
 #help th {
-  padding: 1rem 0 0.375rem;
+  padding: var(--space-4) 0 var(--space-2);
   text-align: left;
   font-weight: normal;
-  font-style: italic;
   color: var(--muted);
 }
-#help td { padding: 0.1875rem 0; }
-#help td:first-child { padding-right: 1.75rem; text-align: right; color: var(--muted); }
+#help td { padding: var(--space-1) 0; }
+#help td:first-child { padding-right: var(--space-6); text-align: right; color: var(--muted); }
 
-#helpButton { margin-left: auto; font-size: 0.8125rem; }
-#status { width: 80%; }
 
 /* Avisos: una ficha centrada al pie del texto, justo sobre la línea del capítulo. Los errores
    llevan "Error:" y el borde en el rojo del tema, y se quedan hasta cerrarlos.
@@ -488,19 +548,19 @@ main.highlighting #modeHint { opacity: 1; }
 #toast {
   position: absolute;
   left: 50%;
-  bottom: 0.75rem;
+  bottom: var(--space-3);
   z-index: 2;
   display: flex;
   align-items: baseline;
-  gap: 0.875rem;
-  max-width: min(36rem, 90%);
-  padding: 0.5rem 0.875rem;
+  gap: var(--space-4);
+  max-width: min(44rem, 90%);
+  padding: var(--space-2) var(--space-4);
   transform: translateX(-50%);
   background: var(--bg);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 0.25rem;
-  font-size: 0.875rem;
+  font-size: var(--text-base);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s, visibility 0.3s;
@@ -508,11 +568,11 @@ main.highlighting #modeHint { opacity: 1; }
 #toast.show { opacity: 1; visibility: visible; }
 #toast.error { border-color: var(--error); }
 #toast strong { color: var(--error); font-weight: 600; }
-#toastAction { color: var(--accent); white-space: nowrap; }
-#toastClose { white-space: nowrap; }
-main.highlighting #toast { bottom: 2.5rem; } /* encima del aviso del modo subrayado */
+#toast button { flex-shrink: 0; white-space: nowrap; } /* el texto se parte en renglones; los botones no */
+#toastAction { color: var(--accent); }
+main.highlighting #toast { bottom: var(--space-10); } /* encima del aviso del modo subrayado */
 
-#open { font-size: 0.9375rem; }
+#open { font-size: var(--text-base); }
 
 /* ── Movimiento reducido (Ajustes del Sistema › Accesibilidad › Pantalla) ──
    Sin parpadeo al empezar un párrafo: la pausa se mantiene, pero la palabra no destella.
