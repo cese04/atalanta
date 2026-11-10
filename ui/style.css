@@ -636,6 +636,64 @@ main.highlighting #toast { bottom: var(--space-10); } /* encima del aviso del mo
 
 #open { font-size: var(--text-base); }
 
+/* ── Pantalla de inicio (home.js): cubre el lector hasta que se abre un libro ── */
+#home {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-10);
+  padding: var(--space-10) 12%;
+  overflow-y: auto;
+  background: var(--bg);
+}
+#home[hidden] { display: none; }
+/* Sin libro abierto, el índice y los controles de lectura no tienen nada que mostrar. */
+body:has(#home:not([hidden])) :is(aside, #chapterBar, #bar) { display: none; }
+#homeLast { display: flex; align-items: flex-end; gap: var(--space-8); }
+#homeCover .cover { display: block; height: 12rem; }
+#homeCover .blank { /* sin portada: el título dentro de un rectángulo con filete */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8rem;
+  box-sizing: border-box;
+  padding: var(--space-3);
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  font-size: var(--text-sm);
+  font-style: italic;
+  text-align: center;
+  color: var(--muted);
+}
+#homeTitle { margin: 0; font-size: var(--text-3xl); font-style: italic; line-height: 1.2; }
+#homeAuthor { margin: var(--space-2) 0 var(--space-6); font-size: var(--text-lg); color: var(--muted); }
+#homeContinue { margin-left: calc(-1 * var(--space-2)); font-size: var(--text-lg); color: var(--fg); } /* el texto alineado con el título */
+#homeLeft { margin: var(--space-1) 0 0; font-size: var(--text-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Recientes: miniatura, título, porcentaje y una barra fina como las del índice. */
+#homeRecent { font-size: var(--text-sm); color: var(--muted); }
+#homeRecent .label { margin: 0 0 var(--space-2); }
+#homeList { list-style: none; margin: 0; padding: 0; max-width: 40rem; font-size: var(--text-base); }
+#homeList button {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) 3rem 6rem;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-1) 0;
+  text-align: left;
+}
+#homeList .cover { display: block; width: 1.5rem; height: 2.25rem; object-fit: cover; }
+#homeList .blank { box-sizing: border-box; border: 1px solid var(--rule); }
+#homeList .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#homeList .percent { text-align: right; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+#homeList .meter { height: 0.125rem; background: var(--bar); }
+#homeList .fill { display: block; }
+#homeKeys { margin: 0; font-size: var(--text-sm); color: var(--muted); }
+
 /* ── Movimiento reducido (Ajustes del Sistema › Accesibilidad › Pantalla) ──
    Sin parpadeo al empezar un párrafo: la pausa se mantiene, pero la palabra no destella.
    Al abrir un libro, la línea del capítulo queda fija en vez de moverse. El vuelo de la

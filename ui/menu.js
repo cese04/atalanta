@@ -117,7 +117,7 @@ function fontItems(check, separator) {
   return items.map(({ group, ...item }) => item); // `group` solo sirve para agrupar
 }
 
-// ── Libros recientes: [{ path, title, words }], el más reciente primero ──
+// ── Libros recientes: [{ path, title, author, words, cover }], el más reciente primero ──
 
 function recentBooks() {
   try {
@@ -128,8 +128,9 @@ function recentBooks() {
 }
 
 function addRecent() {
+  const old = recentBooks().find((r) => r.path === path); // conserva su miniatura (home.js)
   const list = recentBooks().filter((r) => r.path !== path);
-  list.unshift({ path, title: book.title, words: book.words.length });
+  list.unshift({ ...old, path, title: book.title, author: book.author, words: book.words.length });
   localStorage.setItem("recent", JSON.stringify(list.slice(0, 10)));
   buildMenu();
 }

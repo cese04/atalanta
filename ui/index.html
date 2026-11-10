@@ -37,6 +37,23 @@
         <figure id="cover" hidden><img alt="Portada"></figure>
         <div id="text"></div>
       </div>
+      <!-- Pantalla de inicio (home.js): el último libro y los demás recientes -->
+      <section id="home" hidden aria-label="Inicio">
+        <div id="homeLast">
+          <div id="homeCover"></div>
+          <div>
+            <p id="homeTitle"></p>
+            <p id="homeAuthor"></p>
+            <button id="homeContinue"></button>
+            <p id="homeLeft"></p>
+          </div>
+        </div>
+        <div id="homeRecent">
+          <p class="label">Recientes</p>
+          <ul id="homeList"></ul>
+        </div>
+        <p id="homeKeys"><kbd>Espacio</kbd> leer · <kbd>⌘O</kbd> abrir otro · <kbd>?</kbd> atajos</p>
+      </section>
       <!-- Avisos (notify en app.js), centrados sobre los controles. role="status": un lector de
            pantalla lee el texto; los errores, de inmediato (aria-live="assertive"). -->
       <div id="toast">
@@ -133,5 +150,6 @@
   <script src="notes.js"></script>
   <script src="import.js"></script>
   <script src="menu.js"></script>
+  <script src="home.js"></script>
 </body>
 </html>

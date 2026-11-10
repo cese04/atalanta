@@ -17,7 +17,6 @@
 //   "notesDir"    -> carpeta de notas
 //   "markColor"   -> último color de marcatextos usado
 //   "recent"      -> libros recientes
-//   "last"        -> ruta del último libro abierto
 //   "pos:<ruta>"  -> palabra donde te quedaste en ese libro
 //   "started:<ruta>" -> fecha en que se abrió por primera vez (propiedad `started` de la nota)
 
@@ -67,14 +66,14 @@ async function openBook(p) {
     $("msg").textContent = "No se pudo abrir el libro: " + e;
     notify(`No se pudo abrir ${name}: ${e}`, { error: true });
     setPaused(false); // muestra el mensaje
-    localStorage.removeItem("last");
     removeRecent(p);
+    if (!$("home").hidden) renderHome(); // sin ese libro (o sin inicio, si era el único)
     return;
   }
   setLoading(false);
   hideToast(loading);
   path = p;
-  localStorage.setItem("last", p);
+  $("home").hidden = true;
   $("msg").textContent = "";
   $("open").hidden = true;
   $("title").textContent = book.title;
@@ -112,6 +111,7 @@ async function loadCover() {
   const thumb = original && (await shrinkImage(original, COVER_HEIGHT));
   if (!thumb || book !== opened) return; // sin portada, o ya se abrió otro libro
   setCover(thumb);
+  saveRecentCover(path, original); // para la pantalla de inicio (home.js)
   await saveCover(thumb.blob);
 }
 
@@ -961,7 +961,8 @@ document.addEventListener("keydown", (e) => {
     toggleHelp(false);
     setHighlighting(false);
     hideToast();
-  } else if (!book) return;
+  } else if (!book && (e.code === "Space" || e.key === "Enter") && !$("home").hidden && !e.target.closest("button")) $("homeContinue").click();
+  else if (!book) return;
   else if (e.code === "Space") toggle();
   else if (e.key === "ArrowLeft") goTo(pos - 10);
   else if (e.key === "ArrowRight") goTo(pos + 10);
@@ -987,6 +988,5 @@ window.addEventListener("DOMContentLoaded", () => {
   for (const key in toggles) toggles[key].apply(isOn(key));
   setWpm(wpm);
   buildMenu();
-  const last = localStorage.getItem("last");
-  if (last) openBook(last);
+  renderHome(); // el último libro se retoma desde ahí (home.js)
 });
