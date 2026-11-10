@@ -86,6 +86,14 @@ fn write_text(path: String, content: String) -> Result<(), String> {
 }
 
 fn main() {
+    // En Linux, WebKitGTK dibuja con DMABUF/GBM; en algunas tarjetas gráficas (p. ej. Intel con
+    // NVIDIA Optimus, o sin permiso al nodo de render) falla y la ventana queda en blanco.
+    // Se desactiva salvo que el usuario ya haya fijado la variable.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![

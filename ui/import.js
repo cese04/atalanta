@@ -32,7 +32,7 @@ async function importKobo() {
     // no está conectado (o no en su ruta habitual): se pide el archivo
   }
   const file = await open({
-    title: "Elige KoboReader.sqlite (en la carpeta oculta .kobo; ⌘⇧. muestra las carpetas ocultas)",
+    title: `Elige KoboReader.sqlite (en la carpeta oculta .kobo; ${IS_MAC ? "⌘⇧." : "Ctrl+H"} muestra las carpetas ocultas)`,
     filters: [{ name: "Base de datos de Kobo", extensions: ["sqlite"] }],
   });
   if (file) await reportImport("Kobo", invoke("import_kobo", { dir: notesDir, file }));

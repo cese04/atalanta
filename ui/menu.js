@@ -2,6 +2,30 @@
 // Se vuelve a construir entero cada vez que cambia algo (recientes, ajustes), así
 // siempre muestra el estado actual. Usa funciones y ajustes de app.js y notes.js.
 
+// En macOS los atajos son ⌘⌥⇧; en Windows y Linux, Ctrl, Alt y Mayús (el menú ya los traduce
+// solo con "CmdOrCtrl", pero los textos de la interfaz hay que cambiarlos aquí).
+const IS_MAC = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform);
+
+function localizeKeys(text) {
+  return IS_MAC ? text : text.replace(/⌥/g, "Alt+").replace(/⇧/g, "Shift+").replace(/⌘\s*/g, "Ctrl+");
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (IS_MAC) return;
+  for (const kbd of document.querySelectorAll("kbd")) kbd.textContent = localizeKeys(kbd.textContent);
+});
+
+// Algunos elementos predefinidos de Tauri solo existen en macOS (en Linux aparecen en el menú
+// pero no hacen nada); fuera de macOS se sustituyen por elementos propios.
+async function quitApp() {
+  await window.__TAURI__.window.getCurrentWindow().close(); // con una sola ventana, cierra la app
+}
+
+async function toggleFullscreen() {
+  const win = window.__TAURI__.window.getCurrentWindow();
+  await win.setFullscreen(!(await win.isFullscreen()));
+}
+
 // Agrupa varias peticiones seguidas en una sola reconstrucción.
 let menuTimer = null;
 function buildMenu() {
@@ -17,7 +41,7 @@ async function createMenu() {
 
   const items = [
     // En macOS el primer menú lleva el nombre de la app.
-    { text: "Atalanta", items: [
+    ...(IS_MAC ? [{ text: "Atalanta", items: [
       { item: { About: null }, text: "Acerca de Atalanta" },
       separator,
       { item: "Hide", text: "Ocultar Atalanta" },
@@ -25,7 +49,7 @@ async function createMenu() {
       { item: "ShowAll", text: "Mostrar todo" },
       separator,
       { item: "Quit", text: "Salir de Atalanta" },
-    ]},
+    ]}] : []),
 
     { text: "Archivo", items: [
       { text: "Abrir…", accelerator: "CmdOrCtrl+O", action: chooseBook },
@@ -41,14 +65,18 @@ async function createMenu() {
       { text: "Importar subrayados de Kindle…", action: importKindle },
       { text: "Importar subrayados de Kobo…", action: importKobo },
       separator,
-      { item: "CloseWindow", text: "Cerrar ventana" },
+      IS_MAC
+        ? { item: "CloseWindow", text: "Cerrar ventana" }
+        : { text: "Salir", accelerator: "CmdOrCtrl+Q", action: quitApp },
     ]},
 
     // Necesario para copiar, pegar y deshacer al escribir notas.
     { text: "Edición", items: [
-      { item: "Undo", text: "Deshacer" },
-      { item: "Redo", text: "Rehacer" },
-      separator,
+      ...(IS_MAC ? [
+        { item: "Undo", text: "Deshacer" },
+        { item: "Redo", text: "Rehacer" },
+        separator,
+      ] : []),
       { item: "Cut", text: "Cortar" },
       { item: "Copy", text: "Copiar" },
       { item: "Paste", text: "Pegar" },
@@ -79,11 +107,14 @@ async function createMenu() {
         { text: "Tamaño normal", accelerator: "CmdOrCtrl+0", action: () => changeFontSize(0) },
       ]},
       separator,
-      { item: "Fullscreen", text: "Pantalla completa" },
+      IS_MAC
+        ? { item: "Fullscreen", text: "Pantalla completa" }
+        : { text: "Pantalla completa", accelerator: "F11", action: toggleFullscreen },
     ]},
 
     { text: "Ayuda", items: [
       { text: "Atajos de teclado", accelerator: "CmdOrCtrl+/", action: () => toggleHelp(true) },
+      ...(IS_MAC ? [] : [{ item: { About: null }, text: "Acerca de Atalanta" }]),
     ]},
   ];
   const menu = await window.__TAURI__.menu.Menu.new({ items: await Promise.all(items.map(makeItem)) });
@@ -151,8 +182,8 @@ function recentLabel(r) {
   return `${r.title} — ${percent(read, r.words)}`;
 }
 
-// "/Users/ana/Notas/Libros" -> "~/Notas/Libros"; si es largo, solo las dos últimas carpetas.
+// "/Users/ana/Notas/Libros" (o "/home/ana/...") -> "~/Notas/Libros"; si es largo, solo las dos últimas carpetas.
 function shortPath(p) {
-  const parts = p.replace(/^\/Users\/[^/]+/, "~").split("/");
+  const parts = p.replace(/^\/(?:Users|home)\/[^/]+/, "~").split("/");
   return parts.length > 3 ? "…/" + parts.slice(-2).join("/") : parts.join("/");
 }
