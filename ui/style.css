@@ -509,41 +509,65 @@ main.highlighting #modeHint { opacity: 1; }
 
 /* Editor de un subrayado */
 #noteDialog {
-  width: min(35rem, 90vw);
-  padding: var(--space-5) var(--space-6);
+  width: min(46rem, 92vw);
+  padding: var(--space-6) var(--space-8) var(--space-4);
   background: var(--bg);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 0.375rem;
 }
 #noteDialog::backdrop { background: color-mix(in srgb, var(--bg) 60%, transparent); }
-#noteChapter { margin: 0 0 var(--space-4); font-style: italic; color: var(--muted); }
-#noteDialog label { display: block; margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
-#noteDialog textarea {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: var(--space-1);
-  padding: var(--space-2);
-  background: transparent;
-  color: var(--fg);
-  border: 1px solid var(--rule);
-  border-radius: 0.25rem;
-  font-family: inherit;
-  font-size: var(--text-base);
-  line-height: 1.5;
-  resize: vertical;
+/* La cita a la izquierda y el comentario al margen, como una nota de Tufte. */
+#noteDialog .sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 13rem);
+  gap: var(--space-6);
+  align-items: start;
+  margin-bottom: var(--space-6);
+}
+#noteQuote { margin: 0; max-height: 50vh; overflow-y: auto; font-size: var(--text-lg); line-height: 1.6; cursor: text; }
+#noteText {
+  white-space: pre-wrap;
+  background: color-mix(in srgb, var(--mark) var(--mark-alpha), transparent);
+  border-radius: 0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  outline: none; /* el cursor de texto ya dice dónde está el foco */
+  caret-color: var(--accent);
   user-select: text;
   -webkit-user-select: text;
 }
-#noteDialog textarea:focus { outline: none; border-color: var(--accent); }
+#noteText:empty { display: inline-block; min-width: 2em; min-height: 1.6em; vertical-align: top; } /* que se pueda volver a hacer clic */
+#noteComment {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 4lh;
+  max-height: 50vh;
+  field-sizing: content; /* crece con el texto */
+  margin: 0;
+  padding: 0 0 0 var(--space-3);
+  background: transparent;
+  color: var(--fg);
+  border: none;
+  border-left: 1px solid var(--rule);
+  font: inherit;
+  font-size: var(--text-base);
+  font-style: italic;
+  line-height: 1.5;
+  resize: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+#noteComment::placeholder { color: var(--muted); }
+#noteComment:focus { outline: none; border-left-color: var(--accent); }
 #noteDialog .actions { display: flex; align-items: center; gap: var(--space-3); }
+#noteChapter { margin: var(--space-4) 0 0; padding-top: var(--space-3); border-top: 1px solid var(--rule); font-size: var(--text-sm); color: var(--muted); }
 
 /* Selector de color: círculos; el elegido lleva un anillo. */
-.colors { display: flex; align-items: center; gap: var(--space-1); margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
+.colors { display: flex; align-items: center; gap: var(--space-1); }
 /* Cada círculo dentro de un área de clic de 24 px. */
 #noteDialog .colors label { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; margin: 0; }
-.colors .label { margin-right: var(--space-2); }
 .colors input { position: absolute; opacity: 0; pointer-events: none; }
 .colors label span {
   display: block;

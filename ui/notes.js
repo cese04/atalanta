@@ -205,7 +205,7 @@ const draftKey = (h) => `${path}:${h.id || h.start + "-" + h.end}`;
 
 // Lo que muestra el editor ahora mismo.
 const editorValues = () => ({
-  text: $("noteText").value,
+  text: $("noteText").textContent,
   note: $("noteComment").value,
   color: document.querySelector("#noteColors input:checked")?.value || MARK_COLORS[0],
 });
@@ -219,7 +219,8 @@ function openEditor(h) {
   const color = h.id ? markColor(h) : markColor({ color: localStorage.getItem("markColor") }); // nuevo: el último usado
   editorStart = { text: h.text ?? textOf(h.start, h.end), note: h.note ?? "", color };
   const shown = drafts.get(draftKey(h)) || editorStart;
-  $("noteText").value = shown.text;
+  $("noteText").textContent = shown.text;
+  $("noteText").dataset.color = shown.color;
   $("noteComment").value = shown.note;
   document.querySelector(`#noteColors input[value="${shown.color}"]`).checked = true;
   $("noteDelete").hidden = !h.id;
@@ -227,6 +228,10 @@ function openEditor(h) {
   $("noteDialog").showModal();
   $("noteText").focus();
 }
+
+// La cita toma el color elegido; un clic junto a ella (fuera del texto) también la edita.
+$("noteColors").onchange = () => ($("noteText").dataset.color = editorValues().color);
+$("noteQuote").onclick = (e) => e.target === e.currentTarget && $("noteText").focus();
 
 // ⌘ Enter guarda.
 $("noteDialog").onkeydown = (e) => {
@@ -247,7 +252,7 @@ $("noteDialog").onclose = async () => {
     else drafts.delete(draftKey(h));
     return;
   }
-  const text = $("noteText").value.trim();
+  const text = $("noteText").textContent.trim();
   if (!text) return;
   if (!notesDir && !(await chooseNotesDir())) {
     drafts.set(draftKey(h), editorValues()); // no se pierde: sigue en el borrador

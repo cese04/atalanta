@@ -100,24 +100,28 @@
   </div>
 
   <!-- Editor de un subrayado (notes.js) -->
-  <dialog id="noteDialog">
+  <!-- Editor de un subrayado, como una ficha: la cita con su marcatextos, el comentario al
+       margen, colores y botones, y el capítulo al pie. -->
+  <dialog id="noteDialog" aria-label="Subrayado">
     <form method="dialog">
-      <p id="noteChapter"></p>
-      <label><span class="label">Texto subrayado</span> <textarea id="noteText" rows="6"></textarea></label>
-      <label><span class="label">Comentario</span> <textarea id="noteComment" rows="3" placeholder="Opcional"></textarea></label>
-      <div id="noteColors" class="colors">
-        <span class="label">Color</span>
-        <label title="Amarillo"><input type="radio" name="color" value="amarillo" aria-label="Amarillo"><span data-color="amarillo"></span></label>
-        <label title="Verde"><input type="radio" name="color" value="verde" aria-label="Verde"><span data-color="verde"></span></label>
-        <label title="Azul"><input type="radio" name="color" value="azul" aria-label="Azul"><span data-color="azul"></span></label>
-        <label title="Rosa"><input type="radio" name="color" value="rosa" aria-label="Rosa"><span data-color="rosa"></span></label>
+      <div class="sheet">
+        <!-- Un span editable (no un textarea) para que el color siga cada renglón -->
+        <p id="noteQuote"><span id="noteText" contenteditable="plaintext-only" role="textbox" aria-multiline="true" aria-label="Texto subrayado"></span></p>
+        <textarea id="noteComment" rows="4" placeholder="Añade un comentario…" aria-label="Comentario"></textarea>
       </div>
       <div class="actions">
-        <button type="button" id="noteDelete">Eliminar</button>
+        <div id="noteColors" class="colors" role="radiogroup" aria-label="Color">
+          <label title="Amarillo"><input type="radio" name="color" value="amarillo" aria-label="Amarillo"><span data-color="amarillo"></span></label>
+          <label title="Verde"><input type="radio" name="color" value="verde" aria-label="Verde"><span data-color="verde"></span></label>
+          <label title="Azul"><input type="radio" name="color" value="azul" aria-label="Azul"><span data-color="azul"></span></label>
+          <label title="Rosa"><input type="radio" name="color" value="rosa" aria-label="Rosa"><span data-color="rosa"></span></label>
+        </div>
         <span class="spacer"></span>
+        <button type="button" id="noteDelete">Eliminar</button>
         <button value="cancel">Cancelar</button>
         <button value="save" id="noteSave">Guardar <kbd>⌘ Enter</kbd></button>
       </div>
+      <p id="noteChapter" class="label"></p>
     </form>
   </dialog>
 
