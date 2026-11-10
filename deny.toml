@@ -1,0 +1,9 @@
+# cargo-deny: avisos de seguridad (RustSec) de las dependencias. Lo corre el CI
+# (.github/workflows/ci.yml); a mano: `cargo deny check advisories`.
+[advisories]
+# Avisos conocidos sin versión corregida. Se ignoran para que el CI falle solo con avisos nuevos;
+# conviene quitarlos de aquí cuando la dependencia que los trae se actualice.
+ignore = [
+  { id = "RUSTSEC-2021-0153", reason = "encoding sin mantenimiento; lo trae mobi 0.8, sin alternativa por ahora" },
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error sin mantenimiento; solo en Linux, lo trae gtk 0.18 vía Tauri" },
+]

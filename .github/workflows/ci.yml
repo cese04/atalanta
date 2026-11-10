@@ -1,8 +1,10 @@
 # Pruebas y compilación en Windows y Linux (en macOS se prueba y compila a mano, ver README).
 # En cada push a main, en cada pull request o a mano (pestaña Actions › Run workflow):
-#   1. corre ./test.sh (pruebas de Rust y de la interfaz);
-#   2. compila la app y sube los instaladores como artefactos del run, para descargarlos
+#   1. busca avisos de seguridad en las dependencias de Rust con cargo-deny (ver deny.toml);
+#   2. corre ./test.sh (pruebas de Rust y de la interfaz);
+#   3. compila la app y sube los instaladores como artefactos del run, para descargarlos
 #      desde la página del run en GitHub (se borran a los 14 días).
+# Además, cada lunes repite solo el paso 1: salen avisos nuevos aunque el código no cambie.
 name: CI
 
 on:
@@ -10,6 +12,8 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1" # lunes, 9:00 UTC
 
 # Un push nuevo cancela el run anterior de la misma rama.
 concurrency:
@@ -17,7 +21,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  vulnerabilidades:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories
+
   app:
+    if: github.event_name != 'schedule'
     strategy:
       fail-fast: false # que un fallo en un sistema no cancele el otro
       matrix:
