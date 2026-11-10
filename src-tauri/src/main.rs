@@ -2,8 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 // Comandos que la interfaz (ui/) llama con invoke(). La lógica está en el crate core.
-use fastread_core::notes::{Clip, Info};
-use fastread_core::{book, cover, kindle, kobo, notes, pdf};
+use atalanta_core::notes::{Clip, Info};
+use atalanta_core::{book, cover, kindle, kobo, notes, pdf};
 
 /// Lo llama la interfaz (ui/app.js) para abrir un libro.
 #[tauri::command]
@@ -17,7 +17,7 @@ async fn pdf_book(pages: Vec<Vec<pdf::Line>>, outline: Vec<pdf::OutlineItem>, ti
     pdf::build(pages, &outline, title, author)
 }
 
-/// Escribe los subrayados de un origen ("FastRead") en la nota del libro.
+/// Escribe los subrayados de un origen ("Atalanta") en la nota del libro.
 #[tauri::command]
 async fn notes_section(dir: String, info: Info, source: String, clips: Vec<Clip>) -> Result<(), String> {
     notes::write_clips_section(&dir, &info, &source, &clips)
@@ -93,5 +93,5 @@ fn main() {
             import_kindle, import_kobo, read_bytes, write_bytes, read_text, write_text
         ])
         .run(tauri::generate_context!())
-        .expect("error al iniciar FastRead");
+        .expect("error al iniciar Atalanta");
 }

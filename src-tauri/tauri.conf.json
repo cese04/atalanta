@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "FastRead",
+  "productName": "Atalanta",
   "version": "0.1.0",
   "identifier": "com.emiliano.fastread",
   "build": {
@@ -9,7 +9,7 @@
   "app": {
     "withGlobalTauri": true,
     "windows": [
-      { "title": "FastRead", "width": 1000, "height": 650 }
+      { "title": "Atalanta", "width": 1000, "height": 650 }
     ],
     "security": { "csp": null }
   },

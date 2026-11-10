@@ -1,4 +1,4 @@
-// FastRead: muestra un libro palabra por palabra. Al pausar, la palabra "vuela" a su
+// Atalanta: muestra un libro palabra por palabra. Al pausar, la palabra "vuela" a su
 // lugar en el texto completo, que se puede recorrer y donde un clic elige desde dónde seguir.
 //
 // Archivos de la interfaz:

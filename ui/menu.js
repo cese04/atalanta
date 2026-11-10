@@ -17,14 +17,14 @@ async function createMenu() {
 
   const items = [
     // En macOS el primer menú lleva el nombre de la app.
-    { text: "FastRead", items: [
-      { item: { About: null }, text: "Acerca de FastRead" },
+    { text: "Atalanta", items: [
+      { item: { About: null }, text: "Acerca de Atalanta" },
       separator,
-      { item: "Hide", text: "Ocultar FastRead" },
+      { item: "Hide", text: "Ocultar Atalanta" },
       { item: "HideOthers", text: "Ocultar otros" },
       { item: "ShowAll", text: "Mostrar todo" },
       separator,
-      { item: "Quit", text: "Salir de FastRead" },
+      { item: "Quit", text: "Salir de Atalanta" },
     ]},
 
     { text: "Archivo", items: [

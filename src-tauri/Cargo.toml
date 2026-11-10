@@ -1,5 +1,5 @@
 [package]
-name = "fastread"
+name = "atalanta"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,6 +7,6 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-fastread-core = { path = "../core" }       # la lógica: libros, ritmo, notas, importaciones
+atalanta-core = { path = "../core" }       # la lógica: libros, ritmo, notas, importaciones
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"                 # ventana "Abrir archivo"

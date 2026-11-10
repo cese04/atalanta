@@ -1,5 +1,5 @@
 -- Base de datos con la forma de la de un Kobo (.kobo/KoboReader.sqlite), solo con las
--- columnas que usa FastRead.
+-- columnas que usa Atalanta.
 --  - "Sísifo" (kepub): archivos a.html, b.html y c.html; capítulos que empiezan en a y en c.
 --    El subrayado de b.html pertenece al capítulo que empezó en a (como en El mito de Sísifo).
 --  - "Viejo" (epub sin archivos de tipo 9): el capítulo se encuentra por el ContentID.

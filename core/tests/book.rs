@@ -46,7 +46,7 @@ pub fn write_epub(dir: &Path, name: &str, index: Index) -> String {
 }
 
 pub fn temp_dir(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("fastread-pruebas-{name}"));
+    let dir = std::env::temp_dir().join(format!("atalanta-pruebas-{name}"));
     let _ = std::fs::remove_dir_all(&dir);
     dir
 }

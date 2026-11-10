@@ -4,6 +4,6 @@
 set -e
 cd "$(dirname "$0")"
 echo "── Rust ──"
-cargo test -p fastread-core --quiet
+cargo test -p atalanta-core --quiet
 echo "── Interfaz ──"
 node --test "ui-tests/*.test.js"

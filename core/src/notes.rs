@@ -1,12 +1,12 @@
 //! Notas de Obsidian: un `.md` por libro en la carpeta de notas. Tiene propiedades (el bloque
 //! `---` del principio), el resumen del libro (`## Resumen`) y una sección por origen de los
-//! subrayados (`## FastRead`, `## Kindle`, `## Kobo`), cada una entre sus marcas. FastRead solo
+//! subrayados (`## Atalanta`, `## Kindle`, `## Kobo`), cada una entre sus marcas. Atalanta solo
 //! reescribe esas secciones y sus propiedades; lo que escribas fuera de ellas se conserva.
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-/// Un subrayado, venga de FastRead, Kindle o Kobo.
+/// Un subrayado, venga de Atalanta, Kindle o Kobo.
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(default)]
 pub struct Clip {
@@ -41,11 +41,12 @@ pub fn note_path(dir: &str, title: &str) -> PathBuf {
 
 // ── Markdown ──
 
-/// Marcas que delimitan la sección de un origen ("FastRead", "Kindle", "Kobo", "Resumen").
+/// Marcas que delimitan la sección de un origen ("Atalanta", "Kindle", "Kobo", "Resumen").
+/// Usan el nombre anterior de la app (`fastread`) para reconocer las notas ya escritas.
 fn section_marks(source: &str) -> (String, String) {
-    let id = if source == "FastRead" { "fastread".to_string() } else { format!("fastread:{}", source.to_lowercase()) };
+    let id = if source == "Atalanta" { "fastread".to_string() } else { format!("fastread:{}", source.to_lowercase()) };
     (
-        format!("<!-- {id}:inicio · FastRead reescribe esta sección; escribe tus notas fuera de ella -->"),
+        format!("<!-- {id}:inicio · Atalanta reescribe esta sección; escribe tus notas fuera de ella -->"),
         format!("<!-- {id}:fin -->"),
     )
 }

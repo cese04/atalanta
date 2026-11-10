@@ -34,16 +34,16 @@ fn secciones_por_origen_sin_duplicar_y_conservando_lo_escrito_a_mano() {
     let dir = dir.to_str().unwrap();
     std::fs::create_dir_all(dir).unwrap();
     let note = note_path(dir, "Demian");
-    std::fs::copy(format!("{RESOURCES}/Demian.md"), &note).unwrap(); // texto propio y una sección de FastRead vieja
+    std::fs::copy(format!("{RESOURCES}/Demian.md"), &note).unwrap(); // texto propio y una sección de Atalanta vieja
     let info = Info { title: "Demian".into(), ..Default::default() };
     let kindle = [clip("Demian", "Capítulo 5", "El pájaro.\n\nEl huevo.", "Central.")];
     write_clips_section(dir, &info, "Kindle", &kindle).unwrap();
     write_clips_section(dir, &info, "Kindle", &kindle).unwrap(); // reimportar
-    write_clips_section(dir, &info, "FastRead", &[clip("Demian", "", "Cita nueva", "")]).unwrap();
+    write_clips_section(dir, &info, "Atalanta", &[clip("Demian", "", "Cita nueva", "")]).unwrap();
 
     let md = std::fs::read_to_string(&note).unwrap();
     assert_eq!(md.matches("## Kindle").count(), 1, "una sola sección de Kindle");
-    assert_eq!(md.matches("## FastRead").count(), 1, "una sola sección de FastRead");
+    assert_eq!(md.matches("## Atalanta").count(), 1, "una sola sección de Atalanta");
     assert!(md.contains("Cita nueva") && !md.contains("Cita vieja"));
     assert!(md.contains("Mis ideas ANTES") && md.contains("Mis ideas DESPUÉS"));
     assert!(md.contains("### Capítulo 5\n\n> El pájaro.\n>\n> El huevo.\n\nCentral."));

@@ -1,4 +1,4 @@
-//! Lógica de FastRead, sin interfaz: leer libros (EPUB, MOBI y la reconstrucción de PDF),
+//! Lógica de Atalanta, sin interfaz: leer libros (EPUB, MOBI y la reconstrucción de PDF),
 //! portadas, subrayados de Kobo y Kindle, capítulos de las citas, ritmo de lectura y notas
 //! de Obsidian. La app (src-tauri) solo la conecta con la interfaz.
 

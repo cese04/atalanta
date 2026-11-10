@@ -1,13 +1,14 @@
 // Subrayados y notas. Se guardan en la carpeta de notas elegida, dos archivos por libro:
 //   <carpeta>/<Título>.md               para leer en Obsidian. Tiene el resumen del libro
 //                                       (## Resumen, si sus metadatos lo traen) y una sección por
-//                                       origen (## FastRead, ## Kindle, ## Kobo), cada una entre sus
-//                                       marcas; FastRead solo reescribe esas secciones y lo que
+//                                       origen (## Atalanta, ## Kindle, ## Kobo), cada una entre sus
+//                                       marcas; Atalanta solo reescribe esas secciones y lo que
 //                                       escribas fuera de ellas se conserva.
-//   <carpeta>/.fastread/<Título>.json   los subrayados de FastRead, que se pueden editar
-//                                       (Obsidian no muestra carpetas que empiezan con punto).
+//   <carpeta>/.fastread/<Título>.json   los subrayados de Atalanta, que se pueden editar
+//                                       (Obsidian no muestra carpetas que empiezan con punto;
+//                                       ".fastread" es el nombre anterior de la app y se conserva).
 // El Markdown de la nota (secciones, propiedades, resumen) lo escribe Rust (core/src/notes.rs);
-// aquí quedan el modo subrayado, el editor y los datos de los subrayados de FastRead.
+// aquí quedan el modo subrayado, el editor y los datos de los subrayados de Atalanta.
 // Usa `book`, `path`, `pos`, `invoke`, `open` y funciones de app.js. Kindle y Kobo: import.js.
 
 let highlights = []; // [{ id, start, end, text, note, color, chapter, created }], ordenados por `start`
@@ -74,7 +75,7 @@ async function loadHighlights() {
 }
 
 // Guarda los subrayados: sus datos en .fastread/<Título>.json (para poder editarlos) y la
-// sección "## FastRead" y el resumen en la nota (eso lo escribe Rust: core/src/notes.rs).
+// sección "## Atalanta" y el resumen en la nota (eso lo escribe Rust: core/src/notes.rs).
 // Al terminar muestra `message` (con las opciones de notify).
 async function saveHighlights(message = `Guardado en ${notesName()}.md`, options = {}) {
   const data = { title: book.title, author: book.author, source: path, highlights };
@@ -83,7 +84,7 @@ async function saveHighlights(message = `Guardado en ${notesName()}.md`, options
       path: `${notesDir}/.fastread/${notesName()}.json`,
       content: JSON.stringify(data, null, 2),
     });
-    await invoke("notes_section", { dir: notesDir, info: bookInfo(), source: "FastRead", clips: highlights });
+    await invoke("notes_section", { dir: notesDir, info: bookInfo(), source: "Atalanta", clips: highlights });
     await invoke("notes_summary", { dir: notesDir, info: bookInfo(), text: book.description });
     notify(message, options);
   } catch (e) {

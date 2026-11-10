@@ -1,5 +1,5 @@
 [package]
-name = "fastread-core"
+name = "atalanta-core"
 version = "0.1.0"
 edition = "2021"
 # Las pruebas de tests/ se compilan dentro de cada archivo de src/ (ver `mod tests`),

@@ -46,7 +46,7 @@ jobs:
             bundles: nsis
             files: |
               target/release/bundle/nsis/*.exe
-              target/release/fastread.exe
+              target/release/atalanta.exe
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -76,7 +76,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: FastRead-${{ runner.os }}
+          name: Atalanta-${{ runner.os }}
           path: ${{ matrix.files }}
           retention-days: 14
           if-no-files-found: error
