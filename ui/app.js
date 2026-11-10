@@ -198,10 +198,10 @@ function setTocStop(li) {
 
 // Tecla con el foco en un capítulo del índice. Devuelve true si la usó.
 function tocKey(e) {
-  const items = [...$("toc").children];
+  const items = [...$("toc").children].filter((li) => !li.hidden);
   const i = items.indexOf(e.target);
   const to = { ArrowUp: i - 1, ArrowDown: i + 1, Home: 0, End: items.length - 1 }[e.key];
-  if (e.key === "Enter") goTo(book.toc[i].word);
+  if (e.key === "Enter") e.target.click();
   else if (items[to]) {
     setTocStop(items[to]);
     items[to].focus();
@@ -479,9 +479,30 @@ function fillBars() {
   });
 }
 
+// Qué filas del índice se ven con el capítulo número `c` de book.toc abierto: los capítulos
+// principales y solo los subcapítulos del actual. Los que van antes del primer capítulo
+// principal no tienen bajo cuál plegarse y se ven siempre.
+function visibleChapters(toc, c) {
+  const top = Math.min(...toc.map((ch) => ch.level));
+  let main = c;
+  while (main > 0 && toc[main].level > top) main--;
+  let open = true;
+  return toc.map((ch, i) => {
+    if (ch.level === top) open = i === main;
+    return ch.level === top || open;
+  });
+}
+
+function foldToc(c) {
+  const items = $("toc").children;
+  visibleChapters(book.toc, c).forEach((shown, i) => (items[i].hidden = !shown));
+  if (tocStop?.hidden) setTocStop(items[c] || items[0]); // que Tab siga pudiendo entrar al índice
+}
+
 // Marca en el índice el capítulo actual.
 let currentLi = null;
 function highlightChapter(index) {
+  foldToc(index);
   const li = $("toc").children[index] || null;
   if (li === currentLi) return;
   currentLi?.classList.remove("current");

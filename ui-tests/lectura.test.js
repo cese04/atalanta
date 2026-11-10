@@ -145,6 +145,23 @@ test("marcas de capítulo: principales siempre, subcapítulos solo del capítulo
   assert.deepEqual(ticks(60, 0.25), [{ at: 0.5, sub: false }, { at: 0.7, sub: true }]);
 });
 
+test("índice: los subcapítulos solo se ven dentro del capítulo actual", () => {
+  const ui = loadUI();
+  const toc = [
+    { title: "Prólogo", level: 1, word: 0 },
+    { title: "Uno", level: 0, word: 10 },
+    { title: "1.1", level: 1, word: 20 },
+    { title: "1.1.1", level: 2, word: 30 },
+    { title: "Dos", level: 0, word: 50 },
+    { title: "2.1", level: 1, word: 70 },
+  ];
+  const visible = (c) => ui.get(`visibleChapters(${JSON.stringify(toc)}, ${c})`);
+  assert.deepEqual(visible(1), [true, true, true, true, true, false]);  // en "Uno"
+  assert.deepEqual(visible(3), [true, true, true, true, true, false]);  // en un subcapítulo de "Uno"
+  assert.deepEqual(visible(5), [true, true, false, false, true, true]); // en "2.1"
+  assert.deepEqual(visible(-1), [true, true, false, false, true, false]); // antes del primer capítulo
+});
+
 test("marcas de capítulo: si todo está en un nivel más profundo, ese cuenta como principal", () => {
   const ui = loadUI();
   const toc = [{ title: "A", level: 1, word: 0 }, { title: "B", level: 1, word: 40 }];
