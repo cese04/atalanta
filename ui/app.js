@@ -613,8 +613,7 @@ function tick() {
 function advance() {
   pos++;
   const chapter = chapterStarts.get(pos);
-  if (chapter && chapter.level === 0) return chapterBreak(chapter);
-  if (chapter) rampLeft = RAMP_WORDS; // subcapítulo: solo arranque gradual
+  if (chapter) return chapterBreak(chapter); // también los subcapítulos
   if (natural && isParagraphStart(pos)) {
     return isSeparator(paragraphOf(pos)) ? sectionBreak() : blink();
   }
