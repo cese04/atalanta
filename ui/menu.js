@@ -5,9 +5,13 @@
 // En macOS los atajos son ⌘⌥⇧; en Windows y Linux, Ctrl, Alt y Mayús (el menú ya los traduce
 // solo con "CmdOrCtrl", pero los textos de la interfaz hay que cambiarlos aquí).
 const IS_MAC = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform);
+const IS_LINUX = typeof navigator !== "undefined" && /Linux/i.test(navigator.platform);
 
+// "⌥⌘S" -> "Ctrl+Alt+S" (Ctrl va primero, como se acostumbra); "⌘" sola -> "Ctrl"; "⌘+" -> "Ctrl++".
 function localizeKeys(text) {
-  return IS_MAC ? text : text.replace(/⌥/g, "Alt+").replace(/⇧/g, "Shift+").replace(/⌘\s*/g, "Ctrl+");
+  if (IS_MAC) return text;
+  const keys = text.replace(/⌥⌘/g, "⌘⌥").replace(/⌘\s*/g, "Ctrl+").replace(/⌥/g, "Alt+").replace(/⇧/g, "Mayús+");
+  return keys.replace(/(?<!\+)\+$/, "");
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -182,8 +186,10 @@ function recentLabel(r) {
   return `${r.title} — ${percent(read, r.words)}`;
 }
 
-// "/Users/ana/Notas/Libros" (o "/home/ana/...") -> "~/Notas/Libros"; si es largo, solo las dos últimas carpetas.
+// "/Users/ana/Notas/Libros" (o "/home/ana/…", "C:\Users\ana\…") -> "~/Notas/Libros"; si es largo,
+// solo las dos últimas carpetas. Conserva el separador de la ruta: "/", o "\" en Windows.
 function shortPath(p) {
-  const parts = p.replace(/^\/(?:Users|home)\/[^/]+/, "~").split("/");
-  return parts.length > 3 ? "…/" + parts.slice(-2).join("/") : parts.join("/");
+  const sep = p.includes("\\") ? "\\" : "/";
+  const parts = p.replace(/^(?:\/(?:Users|home)\/[^/]+|[A-Za-z]:\\Users\\[^\\]+)/, "~").split(sep);
+  return parts.length > 3 ? "…" + sep + parts.slice(-2).join(sep) : parts.join(sep);
 }

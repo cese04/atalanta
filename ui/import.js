@@ -31,8 +31,10 @@ async function importKobo() {
   } catch {
     // no está conectado (o no en su ruta habitual): se pide el archivo
   }
+  // Atajo para ver las carpetas ocultas en la ventana de archivos (Windows no tiene uno).
+  const hidden = IS_MAC ? "; ⌘⇧. muestra las carpetas ocultas" : IS_LINUX ? "; Ctrl+H muestra las carpetas ocultas" : "";
   const file = await open({
-    title: `Elige KoboReader.sqlite (en la carpeta oculta .kobo; ${IS_MAC ? "⌘⇧." : "Ctrl+H"} muestra las carpetas ocultas)`,
+    title: `Elige KoboReader.sqlite (en la carpeta oculta .kobo${hidden})`,
     filters: [{ name: "Base de datos de Kobo", extensions: ["sqlite"] }],
   });
   if (file) await reportImport("Kobo", invoke("import_kobo", { dir: notesDir, file }));

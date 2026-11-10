@@ -25,6 +25,22 @@ test("libros recientes y rutas cortas", () => {
   assert.equal(ui.run('recentLabel({ path: "/a.epub", title: "Demian", words: 200 })'), "Demian — 25 %");
   assert.equal(ui.run('shortPath("/Users/ana/Notas")'), "~/Notas");
   assert.equal(ui.run('shortPath("/Users/ana/Obsidian/Vault/Libros")'), "…/Vault/Libros");
+  assert.equal(ui.run('shortPath("/home/ana/Notas")'), "~/Notas");
+  assert.equal(ui.run(String.raw`shortPath("C:\\Users\\ana\\Notas")`), "~\\Notas");
+  assert.equal(ui.run(String.raw`shortPath("C:\\Users\\ana\\Obsidian\\Vault\\Libros")`), "…\\Vault\\Libros");
+});
+
+// Las pruebas corren como fuera de macOS: los atajos se escriben con Ctrl, Alt y Mayús.
+test("atajos con Ctrl, Alt y Mayús fuera de macOS", () => {
+  const ui = loadUI();
+  const keys = (text) => ui.run(`localizeKeys(${JSON.stringify(text)})`);
+  assert.equal(keys("⌘O"), "Ctrl+O");
+  assert.equal(keys("⌥⌘S"), "Ctrl+Alt+S");
+  assert.equal(keys("⌘"), "Ctrl");
+  assert.equal(keys("⌘ Enter"), "Ctrl+Enter");
+  assert.equal(keys("⌘+"), "Ctrl++");
+  assert.equal(keys("⇧U"), "Mayús+U");
+  assert.equal(keys("Espacio"), "Espacio");
 });
 
 test("color de marcatextos: amarillo si falta o no es válido", () => {
