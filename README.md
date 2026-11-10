@@ -175,7 +175,7 @@ cargo tauri dev     # run in development mode (reloads when ui/ changes)
 cargo tauri build   # build Atalanta.app and the .dmg in target/release/bundle/
 ```
 
-### Windows and Linux
+### Windows, Linux and macOS
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the tests and builds the app on every push to
 `main`. It also checks Rust dependencies for security advisories with cargo-deny, on every
@@ -188,6 +188,9 @@ push and every Monday (known advisories without a fix are listed in `deny.toml`;
   anyway**).
 - `Atalanta-Linux`: `.deb` (Ubuntu, Debian) and `.AppImage` (any distribution: `chmod +x` and
   open it).
+- `Atalanta-macOS`: `.dmg` for Apple Silicon Macs (M1 or newer). It isn't signed with an Apple
+  Developer account: the first time, macOS refuses to open it; go to **System Settings › Privacy
+  & Security** and choose **Open Anyway**.
 
 ## Tests
 
