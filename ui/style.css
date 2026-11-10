@@ -236,12 +236,24 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   align-items: center;
   justify-content: center;
   margin: 0;
+  flex-direction: column;
   padding: 0 15%;
   text-align: center;
   font-size: var(--text-3xl);
   font-style: italic;
   opacity: 0;
   pointer-events: none;
+}
+#cardLabel { font-size: var(--text-lg); font-style: normal; color: var(--muted); margin: 0 0 var(--space-4); }
+#cardTitle { margin: 0; }
+#cardLabel:empty { display: none; }
+#cardTitle::before { /* filete */
+  content: "";
+  display: block;
+  width: 3rem;
+  height: 1px;
+  margin: 0 auto var(--space-6);
+  background: var(--track);
 }
 #card { transition: opacity 0.3s; }
 #stage:has(#reader.blank, #reader.titled) #head { opacity: 0; }
@@ -256,7 +268,7 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 #word.speech { font-style: italic; }
 
 /* La palabra se divide en 3 columnas para que la letra ancla quede siempre al centro;
-   dos marcas finas arriba y abajo señalan ese punto. */
+   una marca arriba y otra abajo señalan ese punto, y la de abajo sale de una línea base corta. */
 #word {
   position: relative;
   display: grid;
@@ -268,14 +280,39 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
 #word::before, #word::after {
   content: "";
   position: absolute;
+  height: 0.375rem;
+}
+#word::before {
+  top: 0;
   left: 50%;
   width: 1px; /* línea fina: se queda en px */
-  height: 0.625rem;
-  background: var(--rule);
+  background: var(--track);
 }
-#word::before { top: 0; }
-#word::after { bottom: 0; }
+#word::after { /* marca (a 4rem, justo en el centro) y línea base dibujadas con dos fondos */
+  bottom: 0;
+  left: calc(50% - 4rem);
+  width: 8rem;
+  background:
+    linear-gradient(var(--track), var(--track)) 4rem 0 / 1px 100% no-repeat,
+    linear-gradient(var(--rule), var(--rule)) 0 100% / 100% 1px no-repeat;
+}
 #pivot { color: var(--accent); }
+
+#speed {
+  position: absolute;
+  top: calc(50% + 4.5rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#reader:not(.blank, .titled) #speed.on { opacity: 1; transition: none; }
 
 /* Lados de la palabra. Si algo no cabe, se recorta por fuera, nunca junto al centro. */
 .side { display: flex; overflow: hidden; white-space: nowrap; }

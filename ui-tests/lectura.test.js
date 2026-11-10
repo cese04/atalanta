@@ -145,6 +145,17 @@ test("marcas de capítulo: principales siempre, subcapítulos solo del capítulo
   assert.deepEqual(ticks(60, 0.25), [{ at: 0.5, sub: false }, { at: 0.7, sub: true }]);
 });
 
+test("portadilla: separa el rótulo del título solo cuando el título lo trae", () => {
+  const ui = loadUI();
+  const split = (t) => ui.get(`splitChapterTitle(${JSON.stringify(t)})`);
+  assert.deepEqual(split("Capítulo III. Objeto de la lingüística"), ["Capítulo III", "Objeto de la lingüística"]);
+  assert.deepEqual(split("CHAPTER 12: The End"), ["CHAPTER 12", "The End"]);
+  assert.deepEqual(split("Part One — Beginnings"), ["Part One", "Beginnings"]);
+  for (const t of ["Prefacio", "Primera parte", "Capítulo III", "Parte de la oración: el verbo", "1. Introducción"]) {
+    assert.deepEqual(split(t), ["", t]);
+  }
+});
+
 test("índice: los subcapítulos solo se ven dentro del capítulo actual", () => {
   const ui = loadUI();
   const toc = [

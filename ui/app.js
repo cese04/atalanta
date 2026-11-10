@@ -645,7 +645,9 @@ function sectionBreak() {
 function chapterBreak(chapter) {
   $("reader").classList.add("blank");
   timer = setTimeout(() => {
-    $("card").textContent = chapter.title;
+    const [label, title] = splitChapterTitle(chapter.title);
+    $("cardLabel").textContent = label;
+    $("cardTitle").textContent = title;
     $("reader").classList.replace("blank", "titled");
     timer = setTimeout(() => {
       $("reader").classList.remove("titled");
@@ -654,6 +656,13 @@ function chapterBreak(chapter) {
       tick();
     }, CARD_MS);
   }, BREATH_MS);
+}
+
+// "Capítulo III. Objeto de la lingüística" -> ["Capítulo III", "Objeto de la lingüística"].
+// Si no empieza así ("Prefacio", "Primera parte"), no hay rótulo: ["", título].
+function splitChapterTitle(title) {
+  const m = title.match(/^((?:cap[ií]tulo|chapter|parte|part|libro|book)\s+[\p{L}\d]+)\s*[.:—–-]\s+(.+)$/iu);
+  return m ? [m[1], m[2]] : ["", title];
 }
 
 // Si el texto empieza repitiendo el título (ya mostrado en la tarjeta), lo salta.
@@ -852,6 +861,16 @@ function setWpm(value) {
   }
 }
 
+// Con ↑ ↓ o el menú: cambia la velocidad y la muestra un instante bajo la palabra.
+let speedTimer = null;
+function changeWpm(delta) {
+  setWpm(wpm + delta);
+  $("speed").textContent = wpm + " p/min";
+  $("speed").classList.add("on");
+  clearTimeout(speedTimer);
+  speedTimer = setTimeout(() => $("speed").classList.remove("on"), 1000);
+}
+
 function toggleHelp(visible = $("help").hidden) {
   $("help").hidden = !visible;
 }
@@ -947,8 +966,8 @@ document.addEventListener("keydown", (e) => {
   else if (e.code === "Space") toggle();
   else if (e.key === "ArrowLeft") goTo(pos - 10);
   else if (e.key === "ArrowRight") goTo(pos + 10);
-  else if (e.key === "ArrowUp") setWpm(wpm + 25);
-  else if (e.key === "ArrowDown") setWpm(wpm - 25);
+  else if (e.key === "ArrowUp") changeWpm(25);
+  else if (e.key === "ArrowDown") changeWpm(-25);
   else if (e.key === "[") jumpChapter(-1);
   else if (e.key === "]") jumpChapter(1);
   else if (e.key === "s" || e.key === "S") highlightKey();

@@ -23,12 +23,14 @@
       <div id="reader">
         <p id="msg">Abre un libro .epub, .mobi o .pdf para empezar</p>
         <button id="open">Abrir libro… <kbd>⌘O</kbd></button>
-        <p id="card"></p> <!-- título completo al llegar a un capítulo -->
+        <!-- Portadilla al llegar a un capítulo: rótulo ("Capítulo III"), filete y título -->
+        <div id="card"><p id="cardLabel" class="label"></p><p id="cardTitle"></p></div>
         <div id="word">
           <span class="side left"><span id="prev"></span><span id="left"></span></span>
           <span id="pivot"></span>
           <span class="side"><span id="right"></span><span id="next"></span></span>
         </div>
+        <p id="speed" aria-hidden="true"></p> <!-- la velocidad, un instante al cambiarla -->
       </div>
       <!-- El libro completo como texto: la portada y, en #text, un <p> por párrafo (app.js) -->
       <div id="page">
