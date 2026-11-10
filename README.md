@@ -89,6 +89,18 @@ cargo tauri dev     # abrir en modo desarrollo (recarga al editar ui/)
 cargo tauri build   # crear FastRead.app y el .dmg en target/release/bundle/
 ```
 
+### Windows y Linux
+
+GitHub Actions (`.github/workflows/ci.yml`) corre las pruebas y compila la app en cada push a
+`main`. Los instaladores quedan en la página del run (pestaña **Actions**, sección
+*Artifacts*) durante 14 días:
+
+- `FastRead-Windows`: instalador `FastRead_…_x64-setup.exe` y `fastread.exe`, que corre sin
+  instalar. No están firmados: Windows avisa la primera vez (**Más información › Ejecutar de
+  todas formas**).
+- `FastRead-Linux`: `.deb` (Ubuntu, Debian) y `.AppImage` (cualquier distribución:
+  `chmod +x` y abrirlo).
+
 ## Pruebas
 
 ```sh

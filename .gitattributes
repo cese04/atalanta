@@ -1,0 +1,4 @@
+# Fin de línea LF en todos los sistemas: sin esto, Git en Windows convierte los archivos de
+# texto a CRLF al clonar y las pruebas que comparan texto (notas, recortes de Kindle) fallan.
+# Git detecta solo los binarios (imágenes, fuentes) y no los toca.
+* text=auto eol=lf

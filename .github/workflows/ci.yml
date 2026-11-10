@@ -1,0 +1,69 @@
+# Pruebas y compilación en Windows y Linux (en macOS se prueba y compila a mano, ver README).
+# En cada push a main, en cada pull request o a mano (pestaña Actions › Run workflow):
+#   1. corre ./test.sh (pruebas de Rust y de la interfaz);
+#   2. compila la app y sube los instaladores como artefactos del run, para descargarlos
+#      desde la página del run en GitHub (se borran a los 14 días).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Un push nuevo cancela el run anterior de la misma rama.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    strategy:
+      fail-fast: false # que un fallo en un sistema no cancele el otro
+      matrix:
+        include:
+          # Ubuntu 22.04 y no la más reciente: un AppImage solo corre en sistemas con una glibc
+          # igual o más nueva que la de donde se compiló.
+          - os: ubuntu-22.04
+            bundles: deb,appimage
+            files: |
+              target/release/bundle/deb/*.deb
+              target/release/bundle/appimage/*.AppImage
+          - os: windows-latest
+            bundles: nsis
+            files: |
+              target/release/bundle/nsis/*.exe
+              target/release/fastread.exe
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash # también en Windows (Git Bash), para usar ./test.sh tal cual
+    steps:
+      - uses: actions/checkout@v4
+
+      # Lo que Tauri necesita en Linux: WebKitGTK (la vista web) y las herramientas del AppImage.
+      - name: Dependencias de Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2 # guarda lo compilado entre runs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pruebas
+        run: ./test.sh
+
+      # La CLI de Tauri desde npm (ya compilada; `cargo install tauri-cli` tardaría minutos).
+      - name: Compilar
+        run: npx --yes @tauri-apps/cli@2.12.4 build --bundles ${{ matrix.bundles }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FastRead-${{ runner.os }}
+          path: ${{ matrix.files }}
+          retention-days: 14
+          if-no-files-found: error
