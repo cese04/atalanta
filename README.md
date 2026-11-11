@@ -95,7 +95,7 @@ much is left. Press `Space` and go.
 - When you resume after a pause of more than 3 seconds, reading goes back to the start of the
   sentence (at most 30 words back), unless you chose another word during the pause.
 - All settings (themes, table of contents, chapter times, neighboring words, natural rhythm,
-  rest breaks) are in the **Ver** (View) menu.
+  rest breaks, Kindle and Kobo highlights in the text) are in the **Ver** (View) menu.
 - Shortcuts: press `?` or **Ayuda › Atajos de teclado** (Help › Keyboard shortcuts, ⌘/).
 
 <p align="center"><img src="docs/screenshots/shortcuts.jpg" alt="Keyboard shortcuts overlay in Dracula" width="80%"></p>
@@ -159,20 +159,33 @@ view, your book notes show up with their covers.
 
 ## Import from Kindle and Kobo
 
-Connect the reader over USB and choose **Archivo › Importar subrayados de Kindle…** or
-**…de Kobo…** (File › Import highlights from Kindle / Kobo). If the reader isn't found, you're
-asked for the file:
+Connect the reader over USB and choose **Archivo › Importar subrayados de Kindle o Kobo…**
+(File › Import highlights from Kindle or Kobo). Atalanta finds the reader on macOS, Windows and
+Linux and imports from every one that's connected. While the home screen is showing, a line
+also appears when a reader is connected (*Kindle conectado · Importar subrayados*). If no reader
+is found (some recent Kindles connect over MTP and don't show up as a drive), you're asked for
+the file:
 
 - Kindle: `documents/My Clippings.txt`.
-- Kobo: `.kobo/KoboReader.sqlite` (a hidden folder: in the file dialog, ⌘⇧. shows it).
+- Kobo: `.kobo/KoboReader.sqlite` (a hidden folder: in the file dialog, ⌘⇧. shows it on macOS
+  and Ctrl+H on Linux).
 
 Each import replaces that source's section in the books it brings; it doesn't duplicate on
 re-import and doesn't touch other books. Kindle stores every edit of a highlight as a new
-entry: the last one is kept, and comments are attached to their highlight.
+entry: the last one is kept, and comments are attached to their highlight. The notice says how
+many highlights are new, and its button shows the notes folder.
 
 Kindle doesn't store the chapter of each highlight. Atalanta works it out by searching for the
 quote inside the book: on the Kindle itself or in the folders of your recent books. It needs
 the book as a DRM-free EPUB or MOBI (books bought from Amazon won't work) with a table of contents.
+The notice lists how many books were left without chapters.
+
+Imported highlights also show in the book's text while paused, with the same highlighter as
+Atalanta's (hover to see where it came from and its comment). In highlight mode, clicking one
+opens a copy in the editor: once saved, it's an Atalanta highlight you can edit. **Ver ›
+Subrayados de Kindle y Kobo** hides them. They're saved for this in `.fastread/Kindle/` and
+`.fastread/Kobo/` inside the notes folder, and matched by the book's title: a quote that isn't
+found in the text (another edition or translation) is only in the note.
 
 ## Commands
 
@@ -234,7 +247,7 @@ interface (reusable with another interface), and **`src-tauri`**, the app, which
 | `ui/pdf-reader.js` | Extracts lines, bookmarks and cover from a PDF with pdf.js (`ui/vendor/pdfjs`) |
 | `ui/rhythm.js` | Time per word at the chosen speed, gradual start and where to resume |
 | `ui/notes.js` | Highlights: highlight mode, editor, their data and the reading properties |
-| `ui/import.js` | Choosing the Kindle and Kobo files and reporting the import result |
+| `ui/import.js` | Importing from the connected Kindle or Kobo (or the chosen file) and reporting the result |
 | `ui/menu.js` | Main menu and recent books |
 | `core/src/book.rs` | Reads EPUB/MOBI: words, paragraphs, formatting, table of contents, title, author and summary |
 | `core/src/pdf.rs` | Rebuilds a book from the lines of a PDF |
@@ -243,6 +256,7 @@ interface (reusable with another interface), and **`src-tauri`**, the app, which
 | `core/src/kindle.rs` | Reads and imports a Kindle's My Clippings.txt |
 | `core/src/kobo.rs` | Reads and imports highlights from a Kobo's database |
 | `core/src/chapters.rs` | Finds which chapter of a book each quote is in (for Kindle) |
+| `core/src/readers.rs` | Finds a Kindle or Kobo connected over USB |
 | `core/src/cover.rs` | Extracts the cover of an EPUB or MOBI |
 | `src-tauri/src/main.rs` | Starts the app and exposes `core` to the interface as commands (`open_book`, `pdf_book`, `notes_*`, `import_*`…) |
 

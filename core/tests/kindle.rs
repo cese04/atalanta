@@ -38,9 +38,19 @@ fn importar_con_capitulos_buscados_en_el_libro() {
     std::fs::create_dir_all(file.parent().unwrap()).unwrap();
     std::fs::write(&file, "Libro de prueba (Ana Autora)\n- Your Highlight on Location 10-12 | Added on Sunday\n\nTexto dos. Sección 2.1 Texto final.\n==========\n").unwrap();
     let notes = temp_dir("kindle-notas");
-    let counts = import(notes.to_str().unwrap(), file.to_str().unwrap(), &[books.to_string_lossy().to_string()]).unwrap();
-    assert_eq!(counts, (1, 1));
+    let result = import(notes.to_str().unwrap(), file.to_str().unwrap(), &[books.to_string_lossy().to_string()]).unwrap();
+    assert_eq!(result, Imported { clips: 1, books: 1, new: 1, missing: vec![] });
     let md = std::fs::read_to_string(notes.join("Libro de prueba.md")).unwrap();
     assert!(md.contains("## Resumen\n\nUn libro de prueba.")); // el resumen del libro encontrado
     assert!(md.contains("## Kindle\n\n### Capítulo 2\n\n> Texto dos. Sección 2.1 Texto final."));
+}
+
+#[test]
+fn libros_sin_capitulos_si_no_se_encuentra_el_libro() {
+    let file = temp_dir("kindle-sin-libro").join("My Clippings.txt");
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    std::fs::write(&file, "Otro libro (Ana Autora)\n- Your Highlight on Location 10-12 | Added on Sunday\n\nUna frase.\n==========\n").unwrap();
+    let notes = temp_dir("kindle-sin-libro-notas");
+    let result = import(notes.to_str().unwrap(), file.to_str().unwrap(), &[]).unwrap();
+    assert_eq!(result.missing, ["Otro libro"]);
 }

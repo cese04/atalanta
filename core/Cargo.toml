@@ -12,6 +12,4 @@ zip = { version = "9", default-features = false, features = ["deflate"] }  # un 
 roxmltree = "0.20"                        # leer los XML del EPUB
 mobi = "0.8"                              # leer archivos MOBI
 rusqlite = { version = "0.41", features = ["bundled"] }  # leer los subrayados de un Kobo
-
-[dev-dependencies]
-serde_json = "1"                          # leer los datos de prueba en JSON
+serde_json = "1"                          # guardar los subrayados importados (ver notes::write_clips)

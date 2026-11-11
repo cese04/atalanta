@@ -2,8 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 // Comandos que la interfaz (ui/) llama con invoke(). La lógica está en el crate core.
-use atalanta_core::notes::{Clip, Info};
-use atalanta_core::{book, cover, kindle, kobo, notes, pdf};
+use atalanta_core::notes::{Clip, Imported, Info};
+use atalanta_core::{book, cover, kindle, kobo, notes, pdf, readers};
 
 /// Lo llama la interfaz (ui/app.js) para abrir un libro.
 #[tauri::command]
@@ -35,16 +35,29 @@ async fn notes_properties(dir: String, info: Info, set: Vec<(String, String)>, k
     notes::write_properties(&dir, &info, &set, &keep)
 }
 
-/// Importa My Clippings.txt de un Kindle; busca los capítulos en `book_dirs`. Devuelve (subrayados, libros).
+/// El archivo de subrayados del Kindle y del Kobo conectados, si los hay.
 #[tauri::command]
-async fn import_kindle(dir: String, file: String, book_dirs: Vec<String>) -> Result<(usize, usize), String> {
+async fn find_readers() -> readers::Readers {
+    readers::find()
+}
+
+/// Importa My Clippings.txt de un Kindle; busca los capítulos en `book_dirs`.
+#[tauri::command]
+async fn import_kindle(dir: String, file: String, book_dirs: Vec<String>) -> Result<Imported, String> {
     kindle::import(&dir, &file, &book_dirs)
 }
 
-/// Importa la base de datos de un Kobo. Devuelve (subrayados, libros).
+/// Importa la base de datos de un Kobo.
 #[tauri::command]
-async fn import_kobo(dir: String, file: String) -> Result<(usize, usize), String> {
+async fn import_kobo(dir: String, file: String) -> Result<Imported, String> {
     kobo::import(&dir, &file)
+}
+
+/// Abre una carpeta (la de notas) en Finder, el Explorador o el gestor de archivos.
+#[tauri::command]
+fn open_folder(path: String) -> Result<(), String> {
+    let program = if cfg!(target_os = "macos") { "open" } else if cfg!(windows) { "explorer" } else { "xdg-open" };
+    std::process::Command::new(program).arg(path).spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
 /// Portada de un libro EPUB o MOBI (ver cover.rs); vacía si no tiene.
@@ -98,7 +111,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             open_book, pdf_book, book_cover, notes_section, notes_summary, notes_properties,
-            import_kindle, import_kobo, read_bytes, write_bytes, read_text, write_text
+            find_readers, import_kindle, import_kobo, open_folder, read_bytes, write_bytes, read_text, write_text
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar Atalanta");

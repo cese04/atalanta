@@ -8,7 +8,7 @@
 //! El pájaro rompe el cascarón.
 //! ```
 
-use crate::notes::{self, Clip};
+use crate::notes::{self, Clip, Imported};
 use std::path::Path;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -164,15 +164,19 @@ fn merge(entries: Vec<Entry>) -> Vec<Clip> {
 
 /// Importa My Clippings.txt a la carpeta de notas: busca el capítulo de cada cita (y el
 /// resumen) en los libros de `book_dirs` (ver chapters.rs) y escribe la sección "## Kindle"
-/// de cada libro. Devuelve (subrayados, libros).
-pub fn import(notes_dir: &str, file: &str, book_dirs: &[String]) -> Result<(usize, usize), String> {
+/// de cada libro. En `missing` quedan los libros en que no se encontró ninguna cita.
+pub fn import(notes_dir: &str, file: &str, book_dirs: &[String]) -> Result<Imported, String> {
     let text = std::fs::read_to_string(Path::new(file)).map_err(|e| e.to_string())?;
     let mut clips = parse(&text);
     let mut titles: Vec<String> = clips.iter().map(|c| c.title.clone()).collect();
     titles.dedup();
+    let mut missing = Vec::new();
     for title in titles {
         let quoted: Vec<String> = clips.iter().filter(|c| c.title == title && !c.text.is_empty()).map(|c| c.text.clone()).collect();
         let found = crate::chapters::find(&title, &quoted, book_dirs);
+        if !quoted.is_empty() && found.chapters.iter().all(String::is_empty) {
+            missing.push(title.clone());
+        }
         let mut chapters = found.chapters.into_iter();
         for c in clips.iter_mut().filter(|c| c.title == title) {
             if !c.text.is_empty() {
@@ -181,7 +185,7 @@ pub fn import(notes_dir: &str, file: &str, book_dirs: &[String]) -> Result<(usiz
             c.description = found.description.clone();
         }
     }
-    notes::write_clips(notes_dir, "Kindle", &clips)
+    Ok(Imported { missing, ..notes::write_clips(notes_dir, "Kindle", &clips)? })
 }
 
 // Pruebas: core/tests/kindle.rs

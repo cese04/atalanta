@@ -13,7 +13,8 @@
 //   "theme"       -> tema de colores
 //   "fontScale"   -> tamaño de letra, en % del normal
 //   "font"        -> tipo de letra elegido (ver FONTS) o "auto": el del tema (ver THEMES)
-//   "sidebar", "chart", "context", "natural" -> "1" / "" (ver `toggles`)
+//   "sidebar", "chart", "context", "natural", "imported" -> "1" / "" (ver `toggles`)
+//   "rest"        -> minutos entre pausas de descanso, 0 si están desactivadas (ver restMinutes)
 //   "notesDir"    -> carpeta de notas
 //   "markColor"   -> último color de marcatextos usado
 //   "recent"      -> libros recientes
@@ -292,7 +293,7 @@ function expandStyles(runs, count) {
 function paragraphNodes(i) {
   const start = book.paragraphs[i];
   const end = paragraphEnd(i);
-  const marks = highlights.filter((h) => h.start < end && h.end >= start);
+  const marks = visibleMarks().filter((h) => h.start < end && h.end >= start);
   const styled = wordStyles.subarray(start, end).some(Boolean);
   if (!marks.length && !styled && (pos < start || pos >= end)) return [paragraphText(i)];
 
@@ -306,6 +307,7 @@ function paragraphNodes(i) {
     if (mark) {
       node.dataset.id = mark.id;
       node.dataset.color = markColor(mark);
+      if (mark.source) node.title = mark.source + (mark.note ? ": " + mark.note : ""); // importado
     }
     return node;
   };
@@ -405,7 +407,9 @@ $("page").onclick = (e) => {
   if (!book || timer || busy || $("noteDialog").open || !getSelection().isCollapsed) return;
   if (highlighting) {
     const mark = e.target.closest(".hl");
-    if (mark) openEditor(highlights.find((h) => h.id === mark.dataset.id));
+    const h = mark && visibleMarks().find((h) => h.id === mark.dataset.id);
+    // Importado: una copia, con el texto del libro (el del Kobo puede traer los versos pegados).
+    if (h) openEditor(h.source ? { start: h.start, end: h.end, note: h.note, from: h.source } : h);
     return;
   }
   const caret = document.caretRangeFromPoint(e.clientX, e.clientY);
@@ -436,7 +440,7 @@ function show() {
   $("prev").textContent = book.words[pos - 1] || "";
   $("next").textContent = book.words[pos + 1] || "";
   $("word").classList.toggle("speech", natural && isSpeech(pos)); // diálogo en cursiva
-  const mark = highlights.find((h) => pos >= h.start && pos <= h.end); // palabra subrayada: con su color
+  const mark = visibleMarks().find((h) => pos >= h.start && pos <= h.end); // palabra subrayada: con su color
   if (mark) $("word").setAttribute("data-color", markColor(mark));
   else $("word").removeAttribute("data-color");
 
@@ -821,6 +825,8 @@ const toggles = {
              apply: (on) => document.body.classList.toggle("nocover", !on) },
   natural: { label: "Ritmo natural", on: true,
              apply: (on) => { natural = on; if (book) show(); } },
+  imported: { label: "Subrayados de Kindle y Kobo", on: true, // en el texto (ver loadImported en notes.js)
+              apply: () => { if (book) { refreshParagraphs(0, book.words.length - 1); show(); } } },
 };
 
 function isOn(key) {

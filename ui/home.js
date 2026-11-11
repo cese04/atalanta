@@ -14,6 +14,7 @@ function renderHome() {
   $("homeContinue").textContent = `Seguir leyendo — ${percent(readOf(last), last.words)}`;
   $("homeLeft").textContent = `quedan ${formatMinutes((last.words - readOf(last)) / wpm)}`;
   $("homeRecent").hidden = !others.length;
+  checkReaders();
   $("homeList").replaceChildren(
     ...others.map((r) => {
       const li = document.createElement("li");
@@ -28,6 +29,20 @@ function renderHome() {
     })
   );
 }
+
+// Un Kindle o Kobo conectado: una línea para importar sus subrayados (import.js). Se busca al
+// mostrar la pantalla de inicio y cada pocos segundos mientras se vea, para notar el lector en
+// cuanto se conecte.
+const READERS_EVERY_MS = 5000;
+async function checkReaders() {
+  if ($("home").hidden) return;
+  const { kindle, kobo } = await invoke("find_readers");
+  const names = [kindle && "Kindle", kobo && "Kobo"].filter(Boolean);
+  $("homeReader").hidden = !names.length;
+  $("homeReaderName").textContent = `${names.join(" y ")} ${names.length > 1 ? "conectados" : "conectado"}`;
+}
+setInterval(checkReaders, READERS_EVERY_MS);
+$("homeImport").onclick = importHighlights;
 
 // Palabra donde te quedaste en un libro reciente.
 const readOf = (r) => Number(localStorage.getItem("pos:" + r.path)) || 0;

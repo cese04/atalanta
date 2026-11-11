@@ -1,7 +1,7 @@
 // Pruebas de ui/notes.js y ui/menu.js: lo que queda en la interfaz de las notas (texto de un
 // subrayado, colores, portada, qué propiedades se piden a Rust) y los libros recientes.
 // El Markdown de las notas y las importaciones de Kindle y Kobo se prueban en Rust
-// (core/tests/notes.rs, kindle.rs, kobo.rs).
+// (core/tests/notes.rs, kindle.rs, kobo.rs); aquí, el aviso y cómo se marcan en el texto.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { loadUI, bookFrom } = require("./load-ui.js");
@@ -138,4 +138,41 @@ test("avisos: ⌘Z solo deshace mientras se ve su aviso", () => {
   assert.equal(ui.run("typeof toastUndo"), "function");
   ui.run("hideToast()");
   assert.equal(ui.run("toastUndo"), null);
+});
+
+test("subrayados de Kindle y Kobo: se buscan en el texto y se ven detrás de los de Atalanta", async () => {
+  const ui = loadUI();
+  ui.run(`notesDir = "/Vault"; path = "/Libros/Demian.epub"`);
+  ui.run(`book = ${JSON.stringify(bookFrom("El pájaro rompe el cascarón. — ¿Quién quiere nacer?|Tiene que destruir un mundo.", { title: "Demian" }))}`);
+  ui.files["/Vault/.fastread/Kindle/Demian.json"] = JSON.stringify([
+    { text: "Rompe el cascarón", note: "La frase central." }, // sin mayúsculas ni signos
+    { text: "cascarón. Quién quiere", note: "" },             // salta la raya, que es solo un signo
+    { text: "Una frase de otra edición", note: "" },          // no está en el texto: no se marca
+    { text: "", note: "Solo una nota" },
+  ]);
+  ui.files["/Vault/.fastread/Kobo/Demian.json"] = JSON.stringify([
+    { text: "Tiene que destruir un mundo.", note: "" },
+    { text: "nacer?Tiene que", note: "" },  // palabras pegadas, como los versos en el Kobo
+    { text: "iene que destruir", note: "" }, // empieza a media palabra: no se marca
+  ]);
+  ui.files["/Vault/.fastread/Demian.json"] = JSON.stringify({ highlights: [{ id: "h1", start: 10, end: 12 }] });
+  await ui.run("loadHighlights()");
+
+  assert.deepEqual(ui.get("imported.map((h) => [h.source, h.start, h.end, h.note])"), [
+    ["Kindle", 2, 4, "La frase central."],
+    ["Kindle", 4, 7, ""],
+    ["Kobo", 8, 10, ""],
+    ["Kobo", 9, 13, ""],
+  ]);
+  assert.deepEqual(ui.get("visibleMarks().map((h) => h.id)"), ["h1", "Kindle-2", "Kindle-4", "Kobo-8", "Kobo-9"]); // Atalanta primero
+  ui.run(`setToggle("imported", false)`); // Ver › Subrayados de Kindle y Kobo
+  assert.deepEqual(ui.get("visibleMarks().map((h) => h.id)"), ["h1"]);
+});
+
+test("aviso al importar: nuevos, total y libros sin capítulos", () => {
+  const ui = loadUI();
+  const summary = (r) => ui.run(`importSummary("Kindle", ${JSON.stringify(r)})`).replace(/\u00a0/g, " ");
+  assert.equal(summary({ clips: 177, books: 9, new: 12, missing: [] }), "Kindle: 12 nuevos de 177 subrayados en 9 libros");
+  assert.equal(summary({ clips: 1, books: 1, new: 1, missing: ["Demian"] }), "Kindle: 1 nuevo de 1 subrayado en 1 libro · 1 libro sin capítulos (no se encontró su EPUB)");
+  assert.equal(summary({ clips: 177, books: 9, new: 0, missing: [] }), "Kindle: sin subrayados nuevos (177 en 9 libros)");
 });

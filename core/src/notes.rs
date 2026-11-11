@@ -73,14 +73,28 @@ pub fn clips_markdown(source: &str, clips: &[Clip]) -> String {
         }
         chapter = Some(c.chapter.as_str());
         if !c.text.is_empty() {
-            let quote: Vec<String> = c.text.split('\n').map(|line| format!("> {line}").trim_end().to_string()).collect();
-            out.extend(["".to_string(), quote.join("\n")]);
+            out.extend(["".to_string(), quote(&c.text)]);
         }
         if !c.note.is_empty() {
             out.extend(["".to_string(), c.note.clone()]);
         }
     }
     out.join("\n")
+}
+
+/// Texto como cita de Markdown: "> " delante de cada renglón.
+fn quote(text: &str) -> String {
+    text.split('\n').map(|line| format!("> {line}").trim_end().to_string()).collect::<Vec<_>>().join("\n")
+}
+
+/// Texto de la sección `source` de una nota, con sus marcas ("" si no la tiene).
+fn section<'a>(md: &'a str, source: &str) -> &'a str {
+    let (start, end) = section_marks(source);
+    let start_prefix = &start[..start.find(" ·").unwrap_or(start.len())];
+    match (md.find(start_prefix), md.find(&end)) {
+        (Some(a), Some(b)) if b > a => &md[a..b],
+        _ => "",
+    }
 }
 
 /// Pone (o reemplaza) la sección `source` en el texto de una nota y conserva todo lo demás.
@@ -181,9 +195,25 @@ pub fn write_properties(dir: &str, info: &Info, set: &[(String, String)], keep: 
     if md != old { write(&path, &md) } else { Ok(()) }
 }
 
+/// Resultado de importar de Kindle o Kobo, para el aviso de la interfaz (ui/import.js).
+#[derive(Serialize, Default, Debug, PartialEq)]
+pub struct Imported {
+    pub clips: usize,         // subrayados
+    pub books: usize,         // libros
+    pub new: usize,           // subrayados que no estaban en la nota
+    pub missing: Vec<String>, // libros de Kindle sin capítulos: no se encontró el libro (ver kindle.rs)
+}
+
+/// Archivo con los subrayados importados de un libro, para marcarlos en su texto (ui/notes.js):
+/// <carpeta>/.fastread/Kindle/<Título>.json o .fastread/Kobo/<Título>.json.
+pub fn imported_path(dir: &str, source: &str, title: &str) -> PathBuf {
+    Path::new(dir).join(".fastread").join(source).join(format!("{}.json", file_name(title)))
+}
+
 /// Escribe los subrayados de muchos libros (de Kindle o Kobo) en la nota de cada uno, con su
-/// resumen si lo traen. Devuelve (subrayados, libros).
-pub fn write_clips(dir: &str, source: &str, clips: &[Clip]) -> Result<(usize, usize), String> {
+/// resumen si lo traen, y en el archivo de imported_path. Un subrayado es nuevo si su cita (o su
+/// comentario, si no tiene cita) no estaba en la sección de ese origen.
+pub fn write_clips(dir: &str, source: &str, clips: &[Clip]) -> Result<Imported, String> {
     let mut books: Vec<(String, Vec<Clip>)> = Vec::new(); // en el orden en que aparecen
     for c in clips {
         match books.iter_mut().find(|(t, _)| *t == c.title) {
@@ -191,13 +221,19 @@ pub fn write_clips(dir: &str, source: &str, clips: &[Clip]) -> Result<(usize, us
             None => books.push((c.title.clone(), vec![c.clone()])),
         }
     }
+    let mut new = 0;
     for (title, list) in &books {
         let info = Info { title: title.clone(), author: list[0].author.clone(), source: source.to_string() };
+        let old = read(&note_path(dir, title));
+        let old = section(&old, source);
+        new += list.iter().filter(|c| !old.contains(&if c.text.is_empty() { c.note.clone() } else { quote(&c.text) })).count();
         write_clips_section(dir, &info, source, list)?;
         let description = list.iter().find(|c| !c.description.is_empty()).map_or("", |c| c.description.as_str());
         write_summary(dir, &info, description)?;
+        let saved: Vec<Clip> = list.iter().map(|c| Clip { description: String::new(), ..c.clone() }).collect(); // el resumen ya está en la nota
+        write(&imported_path(dir, source, title), &serde_json::to_string_pretty(&saved).map_err(|e| e.to_string())?)?;
     }
-    Ok((clips.len(), books.len()))
+    Ok(Imported { clips: clips.len(), books: books.len(), new, missing: Vec::new() })
 }
 
 // Pruebas: core/tests/notes.rs

@@ -38,8 +38,7 @@ const QUERY: &str = "
     ORDER BY book.Title, IFNULL(file.VolumeIndex, 0), b.ChapterProgress";
 
 /// Importa los subrayados del Kobo a la carpeta de notas (sección "## Kobo" de cada libro).
-/// Devuelve (subrayados, libros).
-pub fn import(notes_dir: &str, db: &str) -> Result<(usize, usize), String> {
+pub fn import(notes_dir: &str, db: &str) -> Result<crate::notes::Imported, String> {
     crate::notes::write_clips(notes_dir, "Kobo", &highlights(db)?)
 }
 
@@ -62,7 +61,7 @@ pub fn highlights(path: &str) -> Result<Vec<Clip>, String> {
     rows.collect::<Result<_, _>>().map_err(|e| e.to_string())
 }
 
-// Pruebas: src-tauri/tests/kobo.rs
+// Pruebas: core/tests/kobo.rs
 #[cfg(test)]
 #[path = "../tests/kobo.rs"]
 mod tests;

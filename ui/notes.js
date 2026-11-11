@@ -1,4 +1,5 @@
-// Subrayados y notas. Se guardan en la carpeta de notas elegida, dos archivos por libro:
+// Subrayados y notas. Se guardan en la carpeta de notas elegida, dos archivos por libro (y los
+// importados de Kindle y Kobo):
 //   <carpeta>/<Título>.md               para leer en Obsidian. Tiene el resumen del libro
 //                                       (## Resumen, si sus metadatos lo traen) y una sección por
 //                                       origen (## Atalanta, ## Kindle, ## Kobo), cada una entre sus
@@ -7,11 +8,14 @@
 //   <carpeta>/.fastread/<Título>.json   los subrayados de Atalanta, que se pueden editar
 //                                       (Obsidian no muestra carpetas que empiezan con punto;
 //                                       ".fastread" es el nombre anterior de la app y se conserva).
+//   <carpeta>/.fastread/Kindle/<Título>.json (y Kobo/) los importados, para marcarlos en el texto
 // El Markdown de la nota (secciones, propiedades, resumen) lo escribe Rust (core/src/notes.rs);
 // aquí quedan el modo subrayado, el editor y los datos de los subrayados de Atalanta.
-// Usa `book`, `path`, `pos`, `invoke`, `open` y funciones de app.js. Kindle y Kobo: import.js.
+// Usa `book`, `path`, `pos`, `invoke`, `open` y funciones de app.js. Kindle y Kobo: import.js;
+// sus subrayados también se marcan en el texto (ver loadImported) y se pueden copiar a Atalanta.
 
 let highlights = []; // [{ id, start, end, text, note, color, chapter, created }], ordenados por `start`
+let imported = [];   // de Kindle y Kobo, encontrados en el texto: [{ id, start, end, text, note, source }]
 let notesDir = localStorage.getItem("notesDir") || "";
 let highlighting = false; // modo subrayado
 let editing = null;       // subrayado abierto en el editor
@@ -65,6 +69,7 @@ const bookInfo = () => ({ title: book.title, author: book.author, source: path.s
 
 async function loadHighlights() {
   highlights = [];
+  imported = [];
   if (!notesDir) return;
   const json = await invoke("read_text", { path: `${notesDir}/.fastread/${notesName()}.json` });
   try {
@@ -72,6 +77,74 @@ async function loadHighlights() {
   } catch {
     highlights = []; // aún no hay notas de este libro
   }
+  await loadImported();
+}
+
+// ── Subrayados de Kindle y Kobo en el texto ──
+// Al importar, Rust guarda los de cada libro en .fastread/Kindle/<Título>.json y
+// .fastread/Kobo/<Título>.json (ver notes::write_clips). Aquí se busca cada cita en el texto;
+// las que no se encuentran (otra edición, otra traducción) solo están en la nota.
+
+async function loadImported() {
+  imported = [];
+  for (const source of ["Kindle", "Kobo"]) {
+    let clips;
+    try {
+      clips = JSON.parse(await invoke("read_text", { path: `${notesDir}/.fastread/${source}/${notesName()}.json` }));
+    } catch {
+      continue; // no hay subrayados de ese origen para este libro
+    }
+    for (const c of clips) {
+      const found = c.text && findQuote(c.text);
+      if (found) imported.push({ ...found, id: `${source}-${found.start}`, text: c.text, note: c.note, source });
+    }
+  }
+  imported.sort((a, b) => a.start - b.start);
+}
+
+// Subrayados que se ven en el texto: los de Atalanta y, si están activados en Ver, los
+// importados. Los de Atalanta van primero: si coinciden, se ve el de Atalanta.
+const visibleMarks = () => (isOn("imported") ? highlights.concat(imported) : highlights);
+
+// Para comparar: sin mayúsculas, acentos, signos ni espacios ("¿Señor," -> "senor").
+const simplify = (text) => text.normalize("NFD").replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
+// El libro abierto, simplificado: todo su texto seguido y dónde empieza cada palabra.
+let searchText = { book: null, text: "", starts: [] };
+
+// Primera aparición de una cita en el libro: { start, end } (palabras, inclusive) o null. Se
+// compara letra por letra, sin espacios: así se encuentran también las citas con palabras
+// pegadas (el Kobo junta los versos de un poema: "burlada,quedé") o partidas de otro modo.
+// La cita tiene que empezar al principio de una palabra.
+function findQuote(text) {
+  if (searchText.book !== book) {
+    const starts = [];
+    let all = "";
+    for (const word of book.words) {
+      starts.push(all.length);
+      all += simplify(word);
+    }
+    searchText = { book, text: all, starts };
+  }
+  const { text: all, starts } = searchText;
+  const quote = simplify(text);
+  if (!quote) return null;
+  for (let at = all.indexOf(quote); at >= 0; at = all.indexOf(quote, at + 1)) {
+    const start = wordOfChar(starts, at);
+    if (starts[start] === at) return { start, end: wordOfChar(starts, at + quote.length - 1) };
+  }
+  return null;
+}
+
+// Palabra que contiene la letra `at` del texto simplificado (búsqueda binaria; una palabra
+// que es solo un signo no tiene letras y nunca se elige).
+function wordOfChar(starts, at) {
+  let lo = 0, hi = starts.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (starts[mid] <= at) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
 }
 
 // Guarda los subrayados: sus datos en .fastread/<Título>.json (para poder editarlos) y la
@@ -211,12 +284,13 @@ const editorValues = () => ({
   color: document.querySelector("#noteColors input:checked")?.value || MARK_COLORS[0],
 });
 
-// Abre el editor para un subrayado nuevo ({ start, end }) o uno existente.
+// Abre el editor para un subrayado nuevo ({ start, end }), uno existente o la copia de uno
+// importado ({ start, end, note, from: "Kindle" }), que al guardarse queda como de Atalanta.
 let editorStart = null; // los valores al abrir, para saber si cambió algo
 function openEditor(h) {
   editing = h;
   const chapter = chapterAt(h.start);
-  $("noteChapter").textContent = chapter < 0 ? book.title : book.toc[chapter].title;
+  $("noteChapter").textContent = (chapter < 0 ? book.title : book.toc[chapter].title) + (h.from ? ` · copia del ${h.from}` : "");
   const color = h.id ? markColor(h) : markColor({ color: localStorage.getItem("markColor") }); // nuevo: el último usado
   editorStart = { text: h.text ?? textOf(h.start, h.end), note: h.note ?? "", color };
   const shown = drafts.get(draftKey(h)) || editorStart;

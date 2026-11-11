@@ -52,7 +52,11 @@
           <p class="label">Recientes</p>
           <ul id="homeList"></ul>
         </div>
-        <p id="homeKeys"><kbd>Espacio</kbd> leer · <kbd>⌘O</kbd> abrir otro · <kbd>?</kbd> atajos</p>
+        <div id="homeFoot">
+          <!-- Un Kindle o Kobo conectado (checkReaders en home.js) -->
+          <p id="homeReader" hidden><span id="homeReaderName"></span> · <button id="homeImport">Importar subrayados</button></p>
+          <p id="homeKeys"><kbd>Espacio</kbd> leer · <kbd>⌘O</kbd> abrir otro · <kbd>?</kbd> atajos</p>
+        </div>
       </section>
       <!-- Avisos (notify en app.js), centrados sobre los controles. role="status": un lector de
            pantalla lee el texto; los errores, de inmediato (aria-live="assertive"). -->

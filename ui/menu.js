@@ -66,8 +66,7 @@ async function createMenu() {
         : [{ text: "Sin libros recientes", enabled: false }] },
       separator,
       { text: notesDir ? `Carpeta de notas: ${shortPath(notesDir)}…` : "Elegir carpeta de notas…", action: chooseNotesDir },
-      { text: "Importar subrayados de Kindle…", action: importKindle },
-      { text: "Importar subrayados de Kobo…", action: importKobo },
+      { text: "Importar subrayados de Kindle o Kobo…", action: importHighlights },
       separator,
       IS_MAC
         ? { item: "CloseWindow", text: "Cerrar ventana" }

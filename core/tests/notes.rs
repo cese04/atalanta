@@ -90,8 +90,8 @@ fn resumen_arriba_despues_de_las_propiedades_y_sin_duplicar() {
     let dir = dir.to_str().unwrap();
     let mut clips = vec![clip("Demian", "", "El pájaro.", "")];
     clips[0].description = "Un libro sobre Sinclair.\n\nSegundo párrafo.".into();
-    write_clips(dir, "Kobo", &clips).unwrap();
-    assert_eq!(write_clips(dir, "Kobo", &clips).unwrap(), (1, 1)); // reimportar
+    assert_eq!(write_clips(dir, "Kobo", &clips).unwrap().new, 1);
+    assert_eq!(write_clips(dir, "Kobo", &clips).unwrap(), Imported { clips: 1, books: 1, new: 0, missing: vec![] }); // reimportar
     let md = std::fs::read_to_string(note_path(dir, "Demian")).unwrap();
     let order: Vec<usize> = ["source: \"Kobo\"", "## Resumen", "Un libro sobre Sinclair.\n\nSegundo párrafo.", "## Kobo"].iter().map(|t| md.find(t).unwrap()).collect();
     assert!(order.windows(2).all(|w| w[0] < w[1]), "propiedades, resumen y subrayados, en ese orden");
@@ -110,4 +110,20 @@ fn resumen_en_una_nota_que_ya_existia_va_al_principio() {
     let md = std::fs::read_to_string(note_path(dir, "Demian")).unwrap();
     assert!(md.starts_with("<!-- fastread:resumen:inicio"));
     assert!(md.contains("## Resumen\n\nUn resumen.") && md.contains("Mis ideas ANTES") && md.contains("Mis ideas DESPUÉS"));
+}
+
+#[test]
+fn importar_cuenta_los_nuevos_y_guarda_los_subrayados_para_el_texto() {
+    let dir = temp_dir("notas-importados");
+    let dir = dir.to_str().unwrap();
+    let mut clips = vec![clip("Demian", "Uno", "El pájaro.", ""), clip("Demian", "Uno", "", "Solo una nota.")];
+    clips[0].description = "Resumen.".into();
+    assert_eq!(write_clips(dir, "Kindle", &clips).unwrap().new, 2);
+    clips.push(clip("Demian", "Dos", "El huevo.", "Nueva."));
+    assert_eq!(write_clips(dir, "Kindle", &clips).unwrap().new, 1); // solo la cita que no estaba
+    assert_eq!(write_clips(dir, "Kobo", &clips).unwrap().new, 3); // otro origen, otra sección
+
+    let saved: Vec<Clip> = serde_json::from_str(&std::fs::read_to_string(imported_path(dir, "Kindle", "Demian")).unwrap()).unwrap();
+    assert_eq!(saved.iter().map(|c| c.text.as_str()).collect::<Vec<_>>(), ["El pájaro.", "", "El huevo."]);
+    assert_eq!(saved[0].description, ""); // el resumen está en la nota, no se repite
 }
