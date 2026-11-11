@@ -561,6 +561,11 @@ window.addEventListener("resize", renderTicks); // con otro ancho caben más o m
 
 // ── Leer / pausar ──
 
+// Tiempo de lectura para las pausas de descanso (ver restBreak).
+let readMs = 0;       // leído desde el último descanso, sin contar el tramo actual
+let readingSince = 0; // cuándo empezó el tramo actual
+let resting = false;  // true durante la pausa de descanso
+
 async function play() {
   if (!book || timer || busy) return;
   setHighlighting(false);
@@ -573,12 +578,15 @@ async function play() {
     scrollToWord(false);
   }
   await switchView(false, $("cur").getBoundingClientRect(), readerWordRect());
+  if (Date.now() - pausedAt > REST_RESET_MS) readMs = 0; // tras una pausa larga los ojos ya descansaron
+  readingSince = Date.now();
   rampLeft = RAMP_WORDS; // al retomar también se arranca de forma gradual
   tick();
 }
 
 function pause() {
   if (!timer) return;
+  readMs = resting ? 0 : readMs + Date.now() - readingSince; // pausar en el descanso también descansa
   stopTimer();
   pausedAt = Date.now();
   chosen = false;
@@ -594,6 +602,7 @@ function pause() {
 function stopTimer() {
   clearTimeout(timer);
   timer = null;
+  resting = false;
   $("play").textContent = "Leer";
   $("reader").classList.remove("blank", "titled", "blink");
 }
@@ -611,6 +620,7 @@ function tick() {
 }
 
 function advance() {
+  if (restDue() && closesSentence(pos)) return restBreak(); // al acabar una frase, no a media
   pos++;
   const chapter = chapterStarts.get(pos);
   if (chapter) return chapterBreak(chapter); // también los subcapítulos
@@ -657,6 +667,44 @@ function chapterBreak(chapter) {
   }, BREATH_MS);
 }
 
+// ── Pausas de descanso: cada cierto tiempo leyendo, una portadilla pide mirar algo lejano
+// durante REST_SECONDS (regla 20-20-20) y la lectura sigue sola. Espacio la salta. ──
+
+const restMinutes = () => Number(localStorage.getItem("rest") ?? 20); // 0: desactivadas
+
+function setRest(minutes) {
+  localStorage.setItem("rest", minutes);
+  buildMenu();
+}
+
+const restDue = () => restMinutes() > 0 && readMs + Date.now() - readingSince >= restMinutes() * 60000;
+
+function restBreak() {
+  resting = true;
+  $("reader").classList.add("blank");
+  timer = setTimeout(() => {
+    $("cardTitle").textContent = "Mira algo lejano";
+    $("reader").classList.replace("blank", "titled");
+    countdown(REST_SECONDS);
+  }, BREATH_MS);
+}
+
+function countdown(seconds) {
+  if (seconds === 0) return endRest();
+  $("cardLabel").textContent = `Descanso · ${seconds}`; // sin "s": en versalitas se vería "S"
+  timer = setTimeout(() => countdown(seconds - 1), 1000);
+}
+
+function endRest() {
+  clearTimeout(timer);
+  resting = false;
+  readMs = 0;
+  readingSince = Date.now();
+  $("reader").classList.remove("blank", "titled");
+  rampLeft = RAMP_WORDS;
+  advance();
+}
+
 // "Capítulo III. Objeto de la lingüística" -> ["Capítulo III", "Objeto de la lingüística"].
 // Si no empieza así ("Prefacio", "Primera parte"), no hay rótulo: ["", título].
 function splitChapterTitle(title) {
@@ -682,7 +730,18 @@ function skipTitle(start, title) {
 
 function setPaused(paused) {
   document.querySelector("main").classList.toggle("paused", paused);
+  document.body.classList.toggle("reading", !paused); // modo foco (ver abajo y style.css)
 }
+
+// Modo foco: leyendo, el índice y la barra casi desaparecen y el cursor se oculta. Al mover el
+// ratón vuelven (body.awake) hasta FOCUS_WAKE_MS después de dejar de moverlo.
+const FOCUS_WAKE_MS = 2000;
+let awakeTimer = null;
+document.addEventListener("mousemove", () => {
+  document.body.classList.add("awake");
+  clearTimeout(awakeTimer);
+  awakeTimer = setTimeout(() => document.body.classList.remove("awake"), FOCUS_WAKE_MS);
+});
 
 // Cambia de vista. Mientras se cruzan con un desvanecido, una copia de la palabra
 // vuela de `from` a `to` (del lector al párrafo al pausar, al revés al reanudar).
@@ -963,7 +1022,7 @@ document.addEventListener("keydown", (e) => {
     hideToast();
   } else if (!book && (e.code === "Space" || e.key === "Enter") && !$("home").hidden && !e.target.closest("button")) $("homeContinue").click();
   else if (!book) return;
-  else if (e.code === "Space") toggle();
+  else if (e.code === "Space") resting ? endRest() : toggle();
   else if (e.key === "ArrowLeft") goTo(pos - 10);
   else if (e.key === "ArrowRight") goTo(pos + 10);
   else if (e.key === "ArrowUp") changeWpm(25);

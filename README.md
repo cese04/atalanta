@@ -42,6 +42,13 @@ the half-title page of a printed book.
 
 <p align="center"><img src="docs/screenshots/chapter-card.jpg" alt="Chapter card for Book II in Gruvbox" width="80%"></p>
 
+Staring at one spot is tiring, so Atalanta keeps your eyes rested. While you read, everything
+around the word (table of contents, bars, chapter title) fades almost away and the cursor
+hides; move the mouse or pause and it comes back. And every 20 minutes of reading, a card asks
+you to look at something far away for 20 seconds, then reading continues on its own (`Space`
+skips it). **Ver › Pausas de descanso** (View › Rest breaks) sets the interval to 15, 20 or 30
+minutes, or turns the breaks off.
+
 ## Stop
 
 When you pause, the word you were reading flies to its spot in the full text. From there you
@@ -87,15 +94,15 @@ much is left. Press `Space` and go.
   resumes the last one where you left off.
 - When you resume after a pause of more than 3 seconds, reading goes back to the start of the
   sentence (at most 30 words back), unless you chose another word during the pause.
-- All settings (themes, table of contents, chapter times, neighboring words, natural rhythm)
-  are in the **Ver** (View) menu.
+- All settings (themes, table of contents, chapter times, neighboring words, natural rhythm,
+  rest breaks) are in the **Ver** (View) menu.
 - Shortcuts: press `?` or **Ayuda › Atajos de teclado** (Help › Keyboard shortcuts, ⌘/).
 
 <p align="center"><img src="docs/screenshots/shortcuts.jpg" alt="Keyboard shortcuts overlay in Dracula" width="80%"></p>
 
 | Key | Action |
 |---|---|
-| `Space` | Read / pause |
+| `Space` | Read / pause; during a rest break, keep reading |
 | `←` `→` | Back / forward 10 words |
 | `↑` `↓` | Faster / slower |
 | `[` `]` (or ⌘[ ⌘]) | Previous / next chapter |

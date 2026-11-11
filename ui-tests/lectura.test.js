@@ -178,3 +178,32 @@ test("marcas de capítulo: si todo está en un nivel más profundo, ese cuenta c
   const toc = [{ title: "A", level: 1, word: 0 }, { title: "B", level: 1, word: 40 }];
   assert.deepEqual(ui.get(`tickPositions(${JSON.stringify(toc)}, 81, 0, 0)`), [{ at: 0.5, sub: false }]);
 });
+
+test("pausas de descanso: al cumplirse el intervalo, al acabar una frase", () => {
+  const ui = loadUI();
+  // "Uno dos." cierra una frase en la palabra 1 (marca SENTENCE_END = 2).
+  ui.run(`book = ${JSON.stringify(bookFrom("Uno dos. Tres cuatro", { rhythm: { flags: [0, 2, 0, 0] } }))}`);
+  ui.run("readingSince = Date.now()");
+  assert.equal(ui.run("restMinutes()"), 20, "cada 20 min si no se ha elegido");
+
+  ui.run("readMs = 19 * 60000");
+  assert.equal(ui.run("restDue()"), false);
+  ui.run("readMs = 20 * 60000");
+  assert.equal(ui.run("restDue()"), true);
+
+  ui.run("pos = 0; advance()"); // a media frase: sigue leyendo
+  assert.equal(ui.run("resting"), false);
+  assert.equal(ui.run("pos"), 1);
+  ui.run("advance()"); // "dos." cierra la frase: descanso, sin avanzar
+  assert.equal(ui.run("resting"), true);
+  assert.equal(ui.run("pos"), 1);
+
+  ui.run("endRest()"); // al terminar (o con Espacio) sigue en la palabra siguiente y reinicia la cuenta
+  assert.equal(ui.run("resting"), false);
+  assert.equal(ui.run("pos"), 2);
+  assert.equal(ui.run("restDue()"), false);
+
+  ui.run("setRest(0); readMs = 60 * 60000");
+  assert.equal(ui.run("restDue()"), false, "desactivadas");
+  assert.equal(ui.storage.get("rest"), "0");
+});

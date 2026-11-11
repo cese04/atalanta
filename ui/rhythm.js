@@ -11,6 +11,8 @@ const RAMP_WORDS = 15;   // palabras para pasar de media velocidad a la normal
 const BLINK_MS = 120;    // parpadeo al empezar un párrafo (ritmo natural)
 const REWIND_AFTER_MS = 3000; // al reanudar tras una pausa más larga, se vuelve al inicio de la frase
 const REWIND_MAX_WORDS = 30;  // …pero sin retroceder más de estas palabras (frases muy largas)
+const REST_SECONDS = 20;      // pausa de descanso (Ver › Pausas de descanso): segundos mirando lejos
+const REST_RESET_MS = 5 * 60000; // una pausa más larga que esto también cuenta como descanso
 
 // Marcas de cada palabra en book.rhythm.flags (las mismas que en core/src/rhythm.rs).
 const SPEECH = 1;       // diálogo

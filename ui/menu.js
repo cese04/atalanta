@@ -102,6 +102,11 @@ async function createMenu() {
     { text: "Ver", items: [
       ...Object.entries(toggles).map(([key, t]) =>
         check(t.label, isOn(key), () => setToggle(key, !isOn(key)), t.accelerator)),
+      { text: "Pausas de descanso", items: [
+        check("Desactivadas", restMinutes() === 0, () => setRest(0)),
+        separator,
+        ...[15, 20, 30].map((m) => check(`Cada ${m} min`, restMinutes() === m, () => setRest(m))),
+      ]},
       separator,
       { text: "Tema", items: THEMES.map(([id, name]) => check(name, id === theme, () => setTheme(id))) },
       { text: "Tipo de letra", items: fontItems(check, separator) },

@@ -152,6 +152,15 @@ kbd {
   color: var(--muted);
 }
 
+/* ── Modo foco ──
+   Leyendo (body.reading), el índice, las barras y el capítulo actual quedan muy tenues y el
+   cursor se oculta, para que nada se mueva al borde de la vista. Vuelven al mover el ratón
+   (body.awake, ver app.js), al pausar o si tienen el foco del teclado (:focus-visible; el de un
+   clic no cuenta: en Windows y Linux el botón Leer se quedaría con el foco y la barra, visible). */
+aside, #chapterBar, #bar { transition: opacity 0.6s; }
+body.reading:not(.awake) :is(aside, #chapterBar, #bar, #head):not(:has(:focus-visible)) { opacity: 0.15; }
+body.reading:not(.awake) { cursor: none; }
+
 /* ── Panel izquierdo ── */
 aside {
   width: 17.5rem;
@@ -244,7 +253,7 @@ main.paused #reader, main:not(.paused) #page { opacity: 0; pointer-events: none;
   opacity: 0;
   pointer-events: none;
 }
-#cardLabel { font-size: var(--text-lg); font-style: normal; color: var(--muted); margin: 0 0 var(--space-4); }
+#cardLabel { font-size: var(--text-lg); font-style: normal; color: var(--muted); margin: 0 0 var(--space-4); font-variant-numeric: tabular-nums; }
 #cardTitle { margin: 0; }
 #cardLabel:empty { display: none; }
 #cardTitle::before { /* filete */
